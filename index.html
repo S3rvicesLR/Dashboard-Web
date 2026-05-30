@@ -10,9 +10,9 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/es.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
 
     <style>
-        /* --- Estilos (sin cambios, los mismos que en la versión anterior) --- */
         :root {
             --bg-app: #F4F7FC;
             --bg-sidebar: #0A1C2F;
@@ -565,12 +565,12 @@
 <body>
 
 <div id="error-banner">
-    <i class="fas fa-exclamation-triangle"></i> Error crítico al cargar fuentes de datos. Verifique conectividad o formato CSV.
+    <i class="fas fa-exclamation-triangle"></i> Error crítico al cargar fuentes de datos. Verifique que el archivo 'Actu_DataCompleta.xlsx' se encuentre en la carpeta raíz del repositorio.
 </div>
 
 <div id="loader-overlay">
     <div class="spinner-modern"></div>
-    <p>SINCRONIZANDO MÉTRICAS DE PRODUCCIÓN</p>
+    <p>SINCRONIZANDO MÉTRICAS DESDE ARCHIVO LOCAL</p>
 </div>
 
 <div class="app-container">
@@ -614,7 +614,7 @@
                 </select>
             </div>
             <button id="btn-clear-filters" class="btn-reset-modern"><i class="fa-solid fa-eraser"></i> Limpiar filtros</button>
-            <button id="btn-refresh-data" class="btn-refresh-modern"><i class="fa-solid fa-rotate-right"></i> Actualizar</button>
+            <button id="btn-refresh-data" class="btn-refresh-modern"><i class="fa-solid fa-rotate-right"></i> Recargar Excel</button>
         </div>
     </aside>
 
@@ -721,54 +721,73 @@
 </div>
 
 <script>
-    // --- URLs actualizadas con los enlaces de descarga directa de OneDrive (CSV) ---
-    const URL_PRODUCCION = "https://1drv.ms/x/c/f056649318ed70a5/IQRujwhUJGv0Qp9hrZecz9b3AXlB36IH7EN2V8aJ-X2VNss?em=2&wdAllowInteractivity=False&Item=Data_OginenPro&wdDownloadButton=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0";
-    const URL_CONTRATACION = "https://1drv.ms/x/c/f056649318ed70a5/IQRujwhUJGv0Qp9hrZecz9b3AXlB36IH7EN2V8aJ-X2VNss?em=2&wdAllowInteractivity=False&Item=Data_OrigenContr&wdDownloadButton=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0";
-    const URL_JERARQUIA = "https://1drv.ms/x/c/f056649318ed70a5/IQRujwhUJGv0Qp9hrZecz9b3AXlB36IH7EN2V8aJ-X2VNss?em=2&wdAllowInteractivity=False&Item=Data_OrigenJerar&wdDownloadButton=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0";
-    const URL_PAGOS = "https://1drv.ms/x/c/f056649318ed70a5/IQRujwhUJGv0Qp9hrZecz9b3AXlB36IH7EN2V8aJ-X2VNss?em=2&wdAllowInteractivity=False&Item=Data_OrigenPag&wdDownloadButton=True&wdInConfigurator=True&wdInConfigurator=True&edaebf=rslc0";
+    // --- ÚNICA FUENTE DE DATOS: Tu archivo local Excel cargado en tu repositorio ---
+    const URL_EXCEL_LOCAL = "./Actu_DataCompleta.xlsx";
 
     let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [];
     let filteredProduccion = [];
     let chartMonthly = null, chartStatus = null;
     let datePicker = null;
 
-    // Estados de expansión
+    // Estados de expansión de tablas
     let polizasExpandidas = false;
     let contratacionesExpandidas = false;
     let jerarquiaExpandidas = false;
     let pagosExpandidos = false;
 
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
-    const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 1 }).format(val / 100);
-
-    async function fetchWithRetry(url, retries = 3, delay = 1000) {
-        for (let i = 0; i < retries; i++) {
-            try {
-                const response = await fetch(url);
-                if (response.ok) return await response.text();
-                throw new Error(`HTTP ${response.status}`);
-            } catch (err) {
-                if (i === retries - 1) throw err;
-                await new Promise(resolve => setTimeout(resolve, delay));
-            }
-        }
-    }
 
     document.addEventListener("DOMContentLoaded", async () => {
         initControls();
-        await cargarFuentesExternas();
+        await cargarExcelUnificado();
     });
 
     function initControls() {
-        datePicker = flatpickr("#date-range-picker", { mode: "range", dateFormat: "Y-m-d", locale: "es", onChange: () => { resetearExpansiones(); aplicarFiltros(); } });
-        document.getElementById("status-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
-        document.getElementById("product-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
-        document.getElementById("agent-filter").addEventListener("change", () => { aplicarFiltros(); renderTablaJerarquia(); renderTablaPagosAgrupados(); });
-        document.getElementById("payment-tracking-filter").addEventListener("change", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
-        document.getElementById("search-polizas").addEventListener("input", () => { polizasExpandidas = false; renderTablaPolizasDetalle(); });
-        document.getElementById("search-contrataciones").addEventListener("input", () => { contratacionesExpandidas = false; renderTablaContrataciones(); });
-        document.getElementById("search-jerarquia").addEventListener("input", () => { jerarquiaExpandidas = false; renderTablaJerarquia(); });
-        document.getElementById("search-pagos").addEventListener("input", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
+        datePicker = flatpickr("#date-range-picker", {
+            mode: "range",
+            dateFormat: "Y-m-d",
+            locale: "es",
+            onChange: () => {
+                resetearExpansiones();
+                aplicarFiltros();
+            }
+        });
+
+        document.getElementById("status-filter").addEventListener("change", () => {
+            resetearExpansiones();
+            aplicarFiltros();
+        });
+        document.getElementById("product-filter").addEventListener("change", () => {
+            resetearExpansiones();
+            aplicarFiltros();
+        });
+        document.getElementById("agent-filter").addEventListener("change", () => {
+            aplicarFiltros();
+            renderTablaJerarquia();
+            renderTablaPagosAgrupados();
+        });
+        document.getElementById("payment-tracking-filter").addEventListener("change", () => {
+            pagosExpandidos = false;
+            renderTablaPagosAgrupados();
+        });
+
+        document.getElementById("search-polizas").addEventListener("input", () => {
+            polizasExpandidas = false;
+            renderTablaPolizasDetalle();
+        });
+        document.getElementById("search-contrataciones").addEventListener("input", () => {
+            contratacionesExpandidas = false;
+            renderTablaContrataciones();
+        });
+        document.getElementById("search-jerarquia").addEventListener("input", () => {
+            jerarquiaExpandidas = false;
+            renderTablaJerarquia();
+        });
+        document.getElementById("search-pagos").addEventListener("input", () => {
+            pagosExpandidos = false;
+            renderTablaPagosAgrupados();
+        });
+
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
             document.getElementById("status-filter").value = "TODAS";
             document.getElementById("product-filter").value = "TODOS";
@@ -781,8 +800,9 @@
             renderTablaJerarquia();
             renderTablaPagosAgrupados();
         });
+
         document.getElementById("btn-refresh-data").addEventListener("click", async () => {
-            await cargarFuentesExternas();
+            await cargarExcelUnificado();
         });
     }
 
@@ -793,33 +813,92 @@
         pagosExpandidos = false;
     }
 
-    async function cargarFuentesExternas() {
+    async function cargarExcelUnificado() {
         try {
             showLoader(true);
             ocultarError();
-            console.log("Iniciando carga de datos desde URLs individuales...");
+            console.log("Cargando libro de datos unificado de forma local...");
+
+            // Petición al archivo local
+            const response = await fetch(URL_EXCEL_LOCAL);
+            if (!response.ok) throw new Error(`No se pudo leer el archivo local. Código de estado: ${response.status}`);
             
-            // Descargar los cuatro CSV en paralelo
-            const [textProd, textCont, textJer, textPagos] = await Promise.all([
-                fetchWithRetry(URL_PRODUCCION, 3),
-                fetchWithRetry(URL_CONTRATACION, 3),
-                fetchWithRetry(URL_JERARQUIA, 3),
-                fetchWithRetry(URL_PAGOS, 3)
-            ]);
+            const arrayBuffer = await response.arrayBuffer();
+            const libroExcel = XLSX.read(arrayBuffer, { type: 'array' });
+
+            // --- PROCESAMIENTO DINÁMICO DE PESTAÑAS DEL EXCEL ---
             
-            console.log("CSV descargados correctamente. Procesando...");
-            
-            // Parsear cada CSV (reutilizando las funciones existentes)
-            rawProduccion = parseCSVProduccion(textProd);
-            rawContratacion = parseCSVContratacion(textCont);
-            rawJerarquia = parseCSVJerarquia(textJer);
-            rawPagos = parseCSVPagos(textPagos);
-            
-            console.log(`Producción: ${rawProduccion.length} registros`);
-            console.log(`Contratación: ${rawContratacion.length} registros`);
-            console.log(`Jerarquía: ${rawJerarquia.length} registros`);
-            console.log(`Pagos: ${rawPagos.length} registros`);
-            
+            // 1. Pestaña Producción
+            const hojaProd = libroExcel.Sheets["Produccion"];
+            if (hojaProd) {
+                const jsonProd = XLSX.utils.sheet_to_json(hojaProd);
+                rawProduccion = jsonProd.map(row => ({
+                    AGENTE: row["Agente"] || "",
+                    ID_PRODUCER: row["ID Producer"] || "",
+                    PRODUCTO: row["Producto"] || "",
+                    PRIMA_NAP: row["Prima NAP"] || "0",
+                    CODIGO_POLIZA: row["Codigo Poliza"] || row["Poliza"] || "",
+                    EMISION: row["Emision"] || "",
+                    ACTIVACION: row["Activacion"] || row["Emision"] || "",
+                    ESTATUS: row["Estatus"] || "",
+                    ESTADO: row["Estado"] || "",
+                    CLIENTE: row["Cliente"] || "",
+                    DIRECCION: row["Direccion"] || "",
+                    CIUDAD: row["Ciudad"] || "",
+                    ZIP_CODE: row["Zip Code"] || "",
+                    TELEFONO: row["Telefono"] || ""
+                }));
+            }
+
+            // 2. Pestaña Contratación
+            const hojaCont = libroExcel.Sheets["Contratacion"] || libroExcel.Sheets["Contratracion"];
+            if (hojaCont) {
+                const jsonCont = XLSX.utils.sheet_to_json(hojaCont);
+                rawContratacion = jsonCont.map(row => ({
+                    AGENTE: row["Agente"] || "",
+                    FECHA_CREACION: row["Fecha de Creacion"] || "",
+                    TIPO_PROCESO: row["Tipo de Proceso"] || "",
+                    ESTATUS: row["Estatus"] || "",
+                    UPLINE: row["Upline"] || "",
+                    CODIGO_NIVEL: row["Codigo Nivel %"] || ""
+                }));
+            }
+
+            // 3. Pestaña Jerarquía
+            const hojaJer = libroExcel.Sheets["Jerarquia"];
+            if (hojaJer) {
+                const jsonJer = XLSX.utils.sheet_to_json(hojaJer);
+                rawJerarquia = jsonJer.map(row => ({
+                    AGENTE: row["Agente"] || "",
+                    NPN_AGENTE: row["NPN Agente"] || "",
+                    ID_PRODUCER: row["ID Producer"] || "",
+                    FECHA_INGRESO: row["Fecha Ingreso"] || "",
+                    CODIGO_NIVEL: row["Codigo Nivel"] || "",
+                    NPN_UPLINE: row["NPN Upline"] || "",
+                    UPLINE: row["Upline"] || ""
+                }));
+            }
+
+            // 4. Pestaña Pagos
+            const hojaPagos = libroExcel.Sheets["Pagos"];
+            if (hojaPagos) {
+                const jsonPagos = XLSX.utils.sheet_to_json(hojaPagos);
+                rawPagos = jsonPagos.map(row => ({
+                    CLIENTE: row["Cliente"] || "",
+                    CODIGO_POLIZA: row["Codigo Poliza"] || "",
+                    ID_PRODUCTO: row["ID Producto"] || "",
+                    ESTATUS: row["Estatus"] || "",
+                    ACTIVACION: row["Activacion"] || "",
+                    PAGADO_HASTA: row["Pagado Hasta"] || "",
+                    METODO_PAGO: row["Metodo Pago"] || "",
+                    PRIMA: row["Prima"] || "0",
+                    PORC_COMISION: row["% Comision"] || "0",
+                    SEGUIMIENTO_PAGO: row["Seguimiento Pago"] || ""
+                }));
+            }
+
+            console.log(`Carga completa -> Prod: ${rawProduccion.length}, Cont: ${rawContratacion.length}, Jerar: ${rawJerarquia.length}, Pagos: ${rawPagos.length}`);
+
             poblarFiltrosDinamicos();
             poblarFiltrosPagos();
             establecerRangoFechaDefault();
@@ -827,589 +906,513 @@
             renderTablaContrataciones();
             renderTablaJerarquia();
             renderTablaPagosAgrupados();
+
         } catch (err) {
-            console.error("Error cargando datos desde CSV:", err);
+            console.error("Error crítico cargando el archivo Excel:", err);
             mostrarErrorGlobal();
-            cargarDatosMock();
-        } finally {
+            // Eliminado por completo cualquier volcado de datos Mock. 
+            // Si falla la carga, el dashboard no dibuja datos mentirosos.
+        </div> finally {
             showLoader(false);
         }
     }
 
-    function cargarDatosMock() {
-        rawProduccion = [
-            { AGENTE: "Carlos López", PRODUCTO: "Vida", PRIMA_NAP: "1500", CODIGO_POLIZA: "POL001", EMISION: "2025-01-15", ACTIVACION: "2025-01-20", ESTATUS: "Activa", ESTADO: "Florida", CLIENTE: "Juan Pérez", DIRECCION: "Calle 123", CIUDAD: "Miami", ZIP_CODE: "33101", TELEFONO: "305-555-1234", ID_PRODUCER: "ID001" },
-            { AGENTE: "María Gómez", PRODUCTO: "Salud", PRIMA_NAP: "2500", CODIGO_POLIZA: "POL002", EMISION: "2025-02-10", ACTIVACION: "2025-02-15", ESTATUS: "Activa", ESTADO: "Texas", CLIENTE: "Ana Rodríguez", DIRECCION: "Avenida 456", CIUDAD: "Houston", ZIP_CODE: "77001", TELEFONO: "713-555-5678", ID_PRODUCER: "ID002" },
-            { AGENTE: "Carlos López", PRODUCTO: "Auto", PRIMA_NAP: "800", CODIGO_POLIZA: "POL003", EMISION: "2025-01-20", ACTIVACION: "2025-01-25", ESTATUS: "Pendiente", ESTADO: "California", CLIENTE: "Roberto Sánchez", DIRECCION: "Boulevard 789", CIUDAD: "Los Ángeles", ZIP_CODE: "90001", TELEFONO: "213-555-9012", ID_PRODUCER: "ID001" }
-        ];
-        rawContratacion = [
-            { AGENTE: "Carlos López", FECHA_CREACION: "2025-01-01", TIPO_PROCESO: "Onboarding", ESTATUS: "Completado", UPLINE: "Directo", CODIGO_NIVEL: "N1" },
-            { AGENTE: "Carlos López", FECHA_CREACION: "2025-02-15", TIPO_PROCESO: "Renovación", ESTATUS: "En revisión", UPLINE: "Regional", CODIGO_NIVEL: "N2" }
-        ];
-        rawJerarquia = [
-            { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-01-01", CODIGO_NIVEL: "1", NPN_UPLINE: "NPN000", UPLINE: "Admin" },
-            { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-03-01", CODIGO_NIVEL: "2", NPN_UPLINE: "NPN001", UPLINE: "Supervisor" }
-        ];
-        rawPagos = [
-            { CLIENTE: "Juan Pérez", CODIGO_POLIZA: "POL001", ID_PRODUCTO: "VIDA01", A_COBRAR: "1500", PAGADO_HASTA: "2025-02-28", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Transferencia", PRIMA: "1500", PORC_COMISION: "10", SEGURO_COBRO: "No", ADVANCE: "0", "SOURCE.NAME": "CRM_Ventas" }
-        ];
-        poblarFiltrosDinamicos();
-        poblarFiltrosPagos();
-        establecerRangoFechaDefault();
-        aplicarFiltros();
-        renderTablaContrataciones();
-        renderTablaJerarquia();
-        renderTablaPagosAgrupados();
-    }
-
-    // --- Funciones de parseo CSV (adaptadas de la versión anterior) ---
-    function parseCSVGeneral(csvText) {
-        const rows = []; let inQuote = false; let row = []; let field = "";
-        for (let i = 0; i < csvText.length; i++) {
-            const ch = csvText[i], next = csvText[i+1];
-            if (ch === '"') {
-                if (inQuote && next === '"') { field += '"'; i++; }
-                else inQuote = !inQuote;
-            } else if (ch === ',' && !inQuote) {
-                row.push(field); field = "";
-            } else if ((ch === '\n' || ch === '\r') && !inQuote) {
-                if (ch === '\r' && next === '\n') i++;
-                row.push(field);
-                if (row.length > 1 || row[0] !== "") rows.push(row);
-                row = []; field = "";
-            } else { field += ch; }
-        }
-        if (field || row.length) { row.push(field); if (row.length > 1 || row[0] !== "") rows.push(row); }
-        return rows;
-    }
-
-    function parseCSVProduccion(csvText) {
-        const rows = parseCSVGeneral(csvText);
-        if (!rows.length) return [];
-        const headers = rows[0].map(h => h.trim());
-        return rows.slice(1).map(line => {
-            const obj = {};
-            headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; });
-            return {
-                AGENTE: obj["Agente"] || "",
-                ID_PRODUCER: obj["ID Producer"] || "",
-                PRODUCTO: obj["Producto"] || "",
-                PRIMA_NAP: obj["Prima NAP"] || "0",
-                CODIGO_POLIZA: obj["Codigo Poliza"] || "",
-                EMISION: obj["Emision"] || "",
-                ACTIVACION: obj["Activacion"] || obj["Emision"] || "",
-                ESTATUS: obj["Estatus"] || "",
-                ESTADO: obj["Estado"] || "",
-                CLIENTE: obj["Cliente"] || "",
-                DIRECCION: obj["Direccion"] || "",
-                CIUDAD: obj["Ciudad"] || "",
-                ZIP_CODE: obj["Zip Code"] || "",
-                TELEFONO: obj["Telefono"] || ""
-            };
-        });
-    }
-
-    function parseCSVContratacion(csvText) {
-        const rows = parseCSVGeneral(csvText);
-        if (!rows.length) return [];
-        const headers = rows[0].map(h => h.trim());
-        return rows.slice(1).map(line => {
-            const obj = {};
-            headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; });
-            return {
-                AGENTE: obj["Agente"] || "",
-                FECHA_CREACION: obj["Fecha de Creacion"] || "",
-                TIPO_PROCESO: obj["Tipo de Proceso"] || "",
-                ESTATUS: obj["Estatus"] || "",
-                UPLINE: obj["Upline"] || "",
-                CODIGO_NIVEL: obj["Codigo Nivel %"] || ""
-            };
-        });
-    }
-
-    function parseCSVJerarquia(csvText) {
-        const rows = parseCSVGeneral(csvText);
-        if (!rows.length) return [];
-        const headers = rows[0].map(h => h.trim());
-        return rows.slice(1).map(line => {
-            const obj = {};
-            headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; });
-            return {
-                AGENTE: obj["Agente"] || "",
-                NPN_AGENTE: obj["NPN Agente"] || "",
-                ID_PRODUCER: obj["ID Producer"] || "",
-                FECHA_INGRESO: obj["Fecha Ingreso"] || "",
-                CODIGO_NIVEL: obj["Codigo Nivel"] || "",
-                NPN_UPLINE: obj["NPN Upline"] || "",
-                UPLINE: obj["Upline"] || ""
-            };
-        });
-    }
-
-    function parseCSVPagos(csvText) {
-        const rows = parseCSVGeneral(csvText);
-        if (!rows.length) return [];
-        const headers = rows[0].map(h => h.trim());
-        return rows.slice(1).map(line => {
-            const obj = {};
-            headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; });
-            return {
-                CLIENTE: obj["Cliente"] || "",
-                CODIGO_POLIZA: obj["Codigo Poliza"] || "",
-                ID_PRODUCTO: obj["ID Producto"] || "",
-                ESTATUS: obj["Estatus"] || "",
-                ACTIVACION: obj["Activacion"] || "",
-                PAGADO_HASTA: obj["Pagado Hasta"] || "",
-                METODO_PAGO: obj["Metodo Pago"] || "",
-                PRIMA: obj["Prima"] || "0",
-                PORC_COMISION: obj["% Comision"] || "0",
-                A_COBRAR: obj["A Cobrar"] || "0",
-                SEGURO_COBRO: obj["Seguro Cobro"] || "0",
-                ADVANCE: obj["Advance"] || "0",
-                SEGUIMIENTO_PAGO: obj["Seguimiento Pago"] || "",
-                "SOURCE.NAME": obj["SOURCE.NAME"] || obj["Source.Name"] || obj["source_name"] || "Sistema"
-            };
-        });
-    }
-
     function poblarFiltrosDinamicos() {
-        const productSelect = document.getElementById("product-filter");
+        const prodSelect = document.getElementById("product-filter");
         const agentSelect = document.getElementById("agent-filter");
-        const productos = new Set(), agentes = new Set();
-        rawProduccion.forEach(p => { if(p.PRODUCTO) productos.add(p.PRODUCTO.trim()); if(p.AGENTE) agentes.add(p.AGENTE.trim()); });
-        productSelect.innerHTML = '<option value="TODOS">Todos los Productos</option>';
-        Array.from(productos).sort().forEach(prod => { const opt = document.createElement("option"); opt.value = prod; opt.textContent = prod; productSelect.appendChild(opt); });
+
+        const productos = [...new Set(rawProduccion.map(r => r.PRODUCTO).filter(Boolean))].sort();
+        const agentes = [...new Set(rawProduccion.map(r => r.AGENTE).filter(Boolean))].sort();
+
+        prodSelect.innerHTML = '<option value="TODOS">Todos los Productos</option>';
+        productos.forEach(p => prodSelect.innerHTML += `<option value="${p}">${p}</option>`);
+
         agentSelect.innerHTML = '<option value="TODOS">Todos los Agentes</option>';
-        Array.from(agentes).sort().forEach(ag => { const opt = document.createElement("option"); opt.value = ag; opt.textContent = ag; agentSelect.appendChild(opt); });
+        agentes.forEach(a => agentSelect.innerHTML += `<option value="${a}">${a}</option>`);
     }
 
     function poblarFiltrosPagos() {
-        const trackingSet = new Set();
-        rawPagos.forEach(p => { if(p.SEGUIMIENTO_PAGO && p.SEGUIMIENTO_PAGO.trim() !== "") trackingSet.add(p.SEGUIMIENTO_PAGO.trim()); });
-        const trackingSelect = document.getElementById("payment-tracking-filter");
-        trackingSelect.innerHTML = '<option value="TODOS">Seguimiento: Todos</option>';
-        Array.from(trackingSet).sort().forEach(t => { const opt = document.createElement("option"); opt.value = t; opt.textContent = t; trackingSelect.appendChild(opt); });
+        const payFilter = document.getElementById("payment-tracking-filter");
+        const estados = [...new Set(rawPagos.map(r => r.SEGUIMIENTO_PAGO).filter(Boolean))].sort();
+        payFilter.innerHTML = '<option value="TODOS">Seguimiento: Todos</option>';
+        estados.forEach(e => payFilter.innerHTML += `<option value="${e}">${e}</option>`);
     }
 
     function establecerRangoFechaDefault() {
         if (!rawProduccion.length) return;
-        const fechas = rawProduccion.map(r => new Date(r.EMISION)).filter(d => !isNaN(d));
-        if (fechas.length) datePicker.setDate([new Date(Math.min(...fechas)), new Date(Math.max(...fechas))]);
+        const fechas = rawProduccion.map(r => new Date(r.EMISION)).filter(d => !isNaN(d.getTime()));
+        if (!fechas.length) return;
+
+        const maxFecha = new Date(Math.max(...fechas));
+        const minFecha = new Date(maxFecha.getFullYear(), maxFecha.getMonth(), 1);
+
+        const formatDate = (d) => d.toISOString().split('T')[0];
+        datePicker.setDate([formatDate(minFecha), formatDate(maxFecha)]);
     }
 
     function aplicarFiltros() {
-        const statusFilter = document.getElementById("status-filter").value;
-        const productFilter = document.getElementById("product-filter").value;
-        const agentFilter = document.getElementById("agent-filter").value;
-        const [startDate, endDate] = datePicker.selectedDates;
+        const statusVal = document.getElementById("status-filter").value;
+        const productVal = document.getElementById("product-filter").value;
+        const agentVal = document.getElementById("agent-filter").value;
+        const rango = datePicker.selectedDates;
+
         filteredProduccion = rawProduccion.filter(row => {
-            if (statusFilter !== "TODAS") {
-                const est = (row.ESTATUS || "").toUpperCase();
-                let match = false;
-                if (statusFilter === "ACTIVAS" && (est === "ACTIVO" || est === "ACTIVA")) match = true;
-                else if (statusFilter === "PENDIENTES" && est === "PENDIENTE") match = true;
-                else if (statusFilter === "SUSPENDIDAS" && est === "SUSPENDIDA") match = true;
-                else if (statusFilter === "TERMINADAS" && est === "TERMINADA") match = true;
-                if (!match) return false;
-            }
-            if (productFilter !== "TODOS" && row.PRODUCTO !== productFilter) return false;
-            if (agentFilter !== "TODOS" && row.AGENTE !== agentFilter) return false;
-            if (startDate && endDate) {
-                const fecha = new Date(row.EMISION);
-                if (isNaN(fecha) || fecha < startDate || fecha > endDate) return false;
+            if (statusVal !== "TODAS" && row.ESTATUS.toUpperCase() !== statusVal) return false;
+            if (productVal !== "TODOS" && row.PRODUCTO !== productVal) return false;
+            if (agentVal !== "TODOS" && row.AGENTE !== agentVal) return false;
+
+            if (rango.length === 2) {
+                const fRow = new Date(row.EMISION);
+                if (isNaN(fRow.getTime())) return false;
+                const inicio = rango[0];
+                const fin = new Set(rango).size === 1 ? new Date(rango[0].getTime() + 86399999) : rango[1];
+                if (fRow < inicio || fRow > fin) return false;
             }
             return true;
         });
-        actualizarKPIs(); renderGraficos(); renderTopAgentes(); renderTablaProductosShare(); renderTablaPolizasDetalle(); renderTablaJerarquia(); renderTablaPagosAgrupados();
+
+        calcularMetricasGlobales();
+        renderGraficoMensual();
+        renderGraficoEstatus();
+        renderTablaTopAgentes();
+        renderTablaProductosMix();
+        renderTablaPolizasDetalle();
     }
 
-    function actualizarKPIs() {
-        let napTotal = 0; const agentesSet = new Set(); const estadosCont = {};
-        filteredProduccion.forEach(row => {
-            const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
-            if (!isNaN(nap)) napTotal += nap;
-            if (row.AGENTE) agentesSet.add(row.AGENTE);
-            const geo = row.ESTADO || "N/D";
-            estadosCont[geo] = (estadosCont[geo] || 0) + 1;
-        });
-        const topEstados = Object.entries(estadosCont).sort((a,b)=>b[1]-a[1]).slice(0,3).map(e=>e[0]).join(", ");
-        document.getElementById("kpi-nap-total").innerText = formatCurrencyNoSymbol(napTotal);
-        document.getElementById("kpi-polizas-totales").innerText = filteredProduccion.length;
-        document.getElementById("kpi-agentes-activos").innerText = agentesSet.size;
-        document.getElementById("kpi-top-estados").innerText = topEstados || "Sin datos";
-    }
+    function calcularMetricasGlobales() {
+        let napTotal = 0;
+        const agentesUnicos = new Set();
+        const conteoEstados = {};
 
-    function renderGraficos() {
-        const mapa = new Map();
         filteredProduccion.forEach(row => {
-            const fecha = new Date(row.EMISION);
-            if (!isNaN(fecha)) {
-                const key = `${fecha.getFullYear()}-${String(fecha.getMonth()+1).padStart(2,'0')}`;
-                const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
-                if (!isNaN(nap)) mapa.set(key, (mapa.get(key) || 0) + nap);
+            const prima = parseFloat(row.PRIMA_NAP.toString().replace(/[^0-9.-]/g, '')) || 0;
+            napTotal += prima;
+            if (row.AGENTE) agentesUnicos.add(row.AGENTE);
+            if (row.ESTADO) {
+                conteoEstados[row.ESTADO] = (conteoEstados[row.ESTADO] || 0) + 1;
             }
         });
-        const sorted = Array.from(mapa.keys()).sort();
-        const labels = sorted.map(k => { const [y,m]=k.split('-'); return new Date(parseInt(y),parseInt(m)-1,1).toLocaleString('es',{month:'short',year:'numeric'}); });
-        const data = sorted.map(k => mapa.get(k));
-        if (chartMonthly) chartMonthly.destroy();
-        const ctxLine = document.getElementById("chart-monthly-nap").getContext("2d");
-        if (!labels.length) chartMonthly = new Chart(ctxLine, { type:'line', data:{labels:['Sin datos'], datasets:[{data:[0],borderColor:'#003399'}] }, options:{responsive:true, maintainAspectRatio:false} });
-        else {
-            const grad = ctxLine.createLinearGradient(0,0,0,220);
-            grad.addColorStop(0,"rgba(0,51,153,0.25)"); grad.addColorStop(1,"rgba(0,51,153,0)");
-            chartMonthly = new Chart(ctxLine, { type:'line', data:{labels, datasets:[{label:'NAP Mensual', data, borderColor:'#003399', borderWidth:3, backgroundColor:grad, fill:true, tension:0.3, pointBackgroundColor:'#D4AF37', pointRadius:4}] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ y:{ ticks:{ callback:v=>formatCurrencyNoSymbol(v) } } } } });
-        }
-        const estMap = {};
-        filteredProduccion.forEach(row => { let e = (row.ESTATUS || "Indefinido").trim(); e = e.charAt(0).toUpperCase()+e.slice(1).toLowerCase(); estMap[e] = (estMap[e]||0)+1; });
-        if (chartStatus) chartStatus.destroy();
-        const ctxBar = document.getElementById("chart-status-distribution").getContext("2d");
-        const colors = Object.keys(estMap).map(e => { const l=e.toLowerCase(); if(l==='activo'||l==='activa') return '#2A9D8F'; if(l==='pendiente') return '#E9C46A'; if(l==='terminada'||l==='suspendida') return '#E76F51'; return '#8D99AE'; });
-        chartStatus = new Chart(ctxBar, { type:'bar', data:{ labels:Object.keys(estMap), datasets:[{ data:Object.values(estMap), backgroundColor:colors, borderRadius:6, barPercentage:0.6 }] }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
+
+        document.getElementById("kpi-nap-total").textContent = `$ ${formatCurrencyNoSymbol(napTotal)}`;
+        document.getElementById("kpi-polizas-totales").textContent = filteredProduccion.length;
+        document.getElementById("kpi-agentes-activos").textContent = agentesUnicos.size;
+
+        const estadosOrdenados = Object.entries(conteoEstados).sort((a,b) => b[1] - a[1]).slice(0, 3).map(e => e[0]);
+        document.getElementById("kpi-top-estados").textContent = estadosOrdenados.length ? estadosOrdenados.join(" | ") : "—";
     }
 
-    function renderTopAgentes() {
-        const agentes = {};
+    function renderGraficoMensual() {
+        const ctx = document.getElementById("chart-monthly-nap").getContext("2d");
+        if (chartMonthly) chartMonthly.destroy();
+
+        const mesesData = {};
         filteredProduccion.forEach(row => {
-            const nom = row.AGENTE; if(!nom) return;
-            if(!agentes[nom]) agentes[nom] = { polizas:0, nap:0, terminadas:0 };
-            const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
-            const est = (row.ESTATUS||"").toUpperCase();
-            agentes[nom].polizas++;
-            if(!isNaN(nap)) agentes[nom].nap += nap;
-            if(est==="TERMINADA"||est==="SUSPENDIDA") agentes[nom].terminadas++;
+            if (!row.EMISION) return;
+            const partes = row.EMISION.split("-");
+            if (partes.length < 2) return;
+            const clave = `${partes[0]}-${partes[1]}`;
+            const prima = parseFloat(row.PRIMA_NAP.toString().replace(/[^0-9.-]/g, '')) || 0;
+            mesesData[clave] = (mesesData[clave] || 0) + prima;
         });
-        const top = Object.entries(agentes).sort((a,b)=>b[1].nap - a[1].nap).slice(0,5);
+
+        const etiquetas = Object.keys(mesesData).sort();
+        const valores = etiquetas.map(e => mesesData[e]);
+
+        chartMonthly = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: etiquetas,
+                datasets: [{
+                    label: 'NAP Emitido ($)',
+                    data: valores,
+                    borderColor: '#003399',
+                    backgroundColor: 'rgba(0, 51, 153, 0.05)',
+                    borderWidth: 2.5,
+                    tension: 0.35,
+                    fill: true,
+                    pointBackgroundColor: '#D4AF37'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { color: '#E2E9F2' }, ticks: { font: { size: 10 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    function renderGraficoEstatus() {
+        const ctx = document.getElementById("chart-status-distribution").getContext("2d");
+        if (chartStatus) chartStatus.destroy();
+
+        const conteo = {};
+        filteredProduccion.forEach(row => {
+            if (row.ESTATUS) conteo[row.ESTATUS] = (conteo[row.ESTATUS] || 0) + 1;
+        });
+
+        chartStatus = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(conteo),
+                datasets: [{
+                    data: Object.values(conteo),
+                    backgroundColor: ['#2A9D8F', '#E9C46A', '#E76F51', '#8D99AE', '#4A90E2', '#9013FE'],
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } }
+                },
+                cutout: '70%'
+            }
+        });
+    }
+
+    function renderTablaTopAgentes() {
         const tbody = document.getElementById("tbody-top-agentes");
         tbody.innerHTML = "";
-        if(!top.length){ tbody.innerHTML="<tr><td colspan='4' class='text-center'>Sin información</td></tr>"; return; }
-        top.forEach(([nombre, ag], idx) => {
-            const persistencia = ag.polizas ? ((ag.polizas - ag.terminadas)/ag.polizas)*100 : 100;
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td class="text-center"><strong>${idx+1}</strong></td><td class="text-left"><strong>${nombre}</strong></td><td class="text-right">${formatCurrencyNoSymbol(ag.nap)}</td><td class="text-right" style="color:${persistencia>=80?'#2A9D8F':'#E76F51'}; font-weight:600;">${formatPercent(persistencia)}</td>`;
-            tbody.appendChild(tr);
-        });
-    }
 
-    function renderTablaProductosShare() {
-        const prodMap = {}; let globalNap = 0;
+        const calculo = {};
         filteredProduccion.forEach(row => {
-            const prod = row.PRODUCTO || "Otros";
-            const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
-            if(!prodMap[prod]) prodMap[prod] = { polizas:0, nap:0 };
-            prodMap[prod].polizas++;
-            if(!isNaN(nap)) { prodMap[prod].nap += nap; globalNap += nap; }
+            if (!row.AGENTE) return;
+            const prima = parseFloat(row.PRIMA_NAP.toString().replace(/[^0-9.-]/g, '')) || 0;
+            if (!calculo[row.AGENTE]) {
+                calculo[row.AGENTE] = { nap: 0, emitidas: 0, activas: 0 };
+            }
+            calculo[row.AGENTE].nap += prima;
+            calculo[row.AGENTE].emitidas += 1;
+            if (row.ESTATUS.toUpperCase() === "ACTIVA" || row.ESTATUS.toUpperCase() === "ACTIVAS") calculo[row.AGENTE].activas += 1;
         });
-        const tbody = document.getElementById("tbody-productos"); tbody.innerHTML = "";
-        Object.entries(prodMap).sort((a,b)=>b[1].nap - a[1].nap).forEach(([name,data]) => {
-            const share = globalNap ? (data.nap/globalNap)*100 : 0;
+
+        const topAgentes = Object.entries(calculo).sort((a,b) => b[1].nap - a[1].nap).slice(0, 5);
+
+        topAgentes.forEach((item, index) => {
+            const [nombre, datos] = item;
+            const persistencia = datos.emitidas > 0 ? (datos.activas / datos.emitidas) * 100 : 0;
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td class="text-left"><strong>${name}</strong></td><td class="text-center">${data.polizas}</td><td class="text-right">${formatCurrencyNoSymbol(data.nap)}</td><td class="text-right" style="font-weight:600;">${formatPercent(share)}</td>`;
+            tr.innerHTML = `
+                <td class="text-center font-weight-bold" style="color:var(--text-muted);">${index+1}</td>
+                <td class="font-weight-bold">${nombre}</td>
+                <td class="text-right font-weight-bold">$ ${formatCurrencyNoSymbol(datos.nap)}</td>
+                <td class="text-right"><span class="badge-pill-flat ${persistencia >= 80 ? 'pill-active' : 'pill-pending'}">${persistencia.toFixed(0)}%</span></td>
+            `;
             tbody.appendChild(tr);
         });
     }
 
-    // --- Tablas de detalle (expansión, búsqueda, etc.) ---
-    function renderTablaPolizasDetalle() {
-        const query = document.getElementById("search-polizas").value.toLowerCase();
-        let source = filteredProduccion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.CLIENTE||"").toLowerCase().includes(query) || (r.CODIGO_POLIZA||"").toLowerCase().includes(query));
-        const tbody = document.getElementById("tbody-detallado-polizas");
+    function renderTablaProductosMix() {
+        const tbody = document.getElementById("tbody-productos");
         tbody.innerHTML = "";
-        const container = document.getElementById("polizas-btn-container");
-        container.innerHTML = "";
-        
-        if(!source.length){ 
-            tbody.innerHTML="<tr><td colspan='6' class='text-center'>No hay coincidencias</td></tr>"; 
-            return; 
-        }
-        
-        let rowsToShow = source;
-        if(!polizasExpandidas && source.length > 6) rowsToShow = source.slice(0,6);
-        
-        rowsToShow.forEach(row => {
-            const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
-            const estRaw = row.ESTATUS || "PENDIENTE";
-            let pill = "pill-neutral";
-            const up = estRaw.toUpperCase();
-            if(up==="ACTIVO"||up==="ACTIVA") pill="pill-active";
-            else if(up==="PENDIENTE") pill="pill-pending";
-            else if(up==="TERMINADA"||up==="SUSPENDIDA") pill="pill-failed";
-            const master = document.createElement("tr"); master.className="interactive-row";
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left">${row.AGENTE||"N/A"}</td><td class="text-left">${row.PRODUCTO||"-"}</td><td class="text-left"><code>${row.CODIGO_POLIZA||"N/A"}</code></td><td class="text-right">${formatCurrencyNoSymbol(nap)}</td><td class="text-center"><span class="badge-pill-flat ${pill}">${estRaw}</span></td>`;
-            const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            detail.innerHTML = `<td colspan="6"><div class="expanded-detail-card"><div class="detail-grid">
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-user"></i> Asegurado</span><span class="field-value">${row.CLIENTE||"—"}</span></div>
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-calendar-check"></i> Fecha Activación</span><span class="field-value">${row.ACTIVACION||"—"}</span></div>
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-calendar"></i> F. Emisión</span><span class="field-value">${row.EMISION||"—"}</span></div>
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-address-card"></i> Dirección</span><span class="field-value">${row.DIRECCION||"—"}</span></div>
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-location-dot"></i> Ciudad / Zip</span><span class="field-value">${row.CIUDAD||"—"} ${row.ZIP_CODE?`(${row.ZIP_CODE})`:""}</span></div>
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-phone"></i> Teléfono</span><span class="field-value">${row.TELEFONO||"—"}</span></div>
-                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-id-card"></i> ID Producer</span><span class="field-value">${row.ID_PRODUCER||"—"}</span></div>
-            </div></div></td>`;
-            master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
-            tbody.appendChild(master); tbody.appendChild(detail);
+
+        let globalNap = 0;
+        const calculo = {};
+        filteredProduccion.forEach(row => {
+            const prima = parseFloat(row.PRIMA_NAP.toString().replace(/[^0-9.-]/g, '')) || 0;
+            globalNap += prima;
+            if (!row.PRODUCTO) return;
+            if (!calculo[row.PRODUCTO]) calculo[row.PRODUCTO] = { nap: 0, conteo: 0 };
+            calculo[row.PRODUCTO].nap += prima;
+            calculo[row.PRODUCTO].conteo += 1;
         });
-        
-        if(source.length > 6) {
-            if(!polizasExpandidas) {
-                const btnVerTodos = document.createElement("button");
-                btnVerTodos.textContent = "Ver todas las pólizas";
-                btnVerTodos.className = "btn-expand";
-                btnVerTodos.onclick = () => {
-                    polizasExpandidas = true;
-                    renderTablaPolizasDetalle();
-                };
-                container.appendChild(btnVerTodos);
-            } else {
-                const btnVerMenos = document.createElement("button");
-                btnVerMenos.textContent = "Mostrar solo 6";
-                btnVerMenos.className = "btn-expand";
-                btnVerMenos.onclick = () => {
-                    polizasExpandidas = false;
-                    renderTablaPolizasDetalle();
-                };
-                container.appendChild(btnVerMenos);
-            }
+
+        Object.entries(calculo).sort((a,b) => b[1].nap - a[1].nap).forEach(item => {
+            const [prod, datos] = item;
+            const share = globalNap > 0 ? (datos.nap / globalNap) * 100 : 0;
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td class="font-weight-bold">${prod}</td>
+                <td class="text-center">${datos.conteo}</td>
+                <td class="text-right font-weight-bold">$ ${formatCurrencyNoSymbol(datos.nap)}</td>
+                <td class="text-right text-muted">${share.toFixed(1)}%</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function renderTablaPolizasDetalle() {
+        const tbody = document.getElementById("tbody-detallado-polizas");
+        const container = document.getElementById("polizas-btn-container");
+        tbody.innerHTML = "";
+        container.innerHTML = "";
+
+        const search = document.getElementById("search-polizas").value.toLowerCase();
+        const records = filteredProduccion.filter(r => 
+            r.CLIENTE.toLowerCase().includes(search) ||
+            r.AGENTE.toLowerCase().includes(search) ||
+            r.CODIGO_POLIZA.toLowerCase().includes(search)
+        );
+
+        const limite = polizasExpandidas ? records.length : 6;
+        const visualizacion = records.slice(0, limite);
+
+        visualizacion.forEach((row, i) => {
+            const master = document.createElement("tr");
+            master.className = "interactive-row";
+            
+            let badgeClass = "pill-neutral";
+            const est = row.ESTATUS.toUpperCase();
+            if(est === "ACTIVA" || est === "ACTIVAS") badgeClass = "pill-active";
+            else if(est === "PENDIENTE" || est === "PENDIENTES") badgeClass = "pill-pending";
+            else if(est === "TERMINADA" || est === "SUSPENDIDA") badgeClass = "pill-failed";
+
+            master.innerHTML = `
+                <td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-chevron-right"></i></button></td>
+                <td>${row.AGENTE}</td>
+                <td>${row.PRODUCTO}</td>
+                <td><code>${row.CODIGO_POLIZA}</code></td>
+                <td class="text-right font-weight-bold">$ ${formatCurrencyNoSymbol(parseFloat(row.PRIMA_NAP.toString().replace(/[^0-9.-]/g, '')) || 0)}</td>
+                <td class="text-center"><span class="badge-pill-flat ${badgeClass}">${row.ESTATUS}</span></td>
+            `;
+
+            const detail = document.createElement("tr");
+            detail.className = "accordion-hidden-row";
+            detail.innerHTML = `
+                <td colspan="6">
+                    <div class="expanded-detail-card">
+                        <div class="detail-grid">
+                            <div class="detail-field"><span class="field-label">Cliente / Asegurado</span><span class="field-value">${row.CLIENTE || '—'}</span></div>
+                            <div class="detail-field"><span class="field-label">ID Producer</span><span class="field-value">${row.ID_PRODUCER || '—'}</span></div>
+                            <div class="detail-field"><span class="field-label">Fecha Emisión</span><span class="field-value">${row.EMISION || '—'}</span></div>
+                            <div class="detail-field"><span class="field-label">Fecha Activación</span><span class="field-value">${row.ACTIVACION || '—'}</span></div>
+                            <div class="detail-field"><span class="field-label">Teléfono</span><span class="field-value">${row.TELEFONO || '—'}</span></div>
+                            <div class="detail-field"><span class="field-label">Ubicación</span><span class="field-value">${row.CIUDAD || ''}, ${row.ESTADO || ''} (${row.ZIP_CODE || ''})</span></div>
+                        </div>
+                    </div>
+                </td>
+            `;
+
+            master.onclick = () => {
+                const open = detail.style.display === "table-row";
+                detail.style.display = open ? "none" : "table-row";
+                master.classList.toggle("row-expanded-state", !open);
+            };
+
+            tbody.appendChild(master);
+            tbody.appendChild(detail);
+        });
+
+        if(records.length > 6) {
+            const btn = document.createElement("button");
+            btn.className = "btn-expand";
+            btn.textContent = polizasExpandidas ? "Mostrar menos" : `Ver todos los registros (${records.length})`;
+            btn.onclick = () => { polizasExpandidas = !polizasExpandidas; renderTablaPolizasDetalle(); };
+            container.appendChild(btn);
         }
     }
 
     function renderTablaContrataciones() {
-        const query = document.getElementById("search-contrataciones").value.toLowerCase();
-        let filtered = rawContratacion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.UPLINE||"").toLowerCase().includes(query));
-        const groupMap = new Map();
-        for(const rec of filtered) {
-            const agente = rec.AGENTE;
-            if(!groupMap.has(agente)) groupMap.set(agente, []);
-            groupMap.get(agente).push(rec);
-        }
-        let agentesData = [];
-        for(const [agente, registros] of groupMap.entries()) {
-            const sorted = registros.sort((a,b) => new Date(b.FECHA_CREACION) - new Date(a.FECHA_CREACION));
-            const latest = sorted[0];
-            const history = sorted.slice(1);
-            agentesData.push({ agente, latest, history });
-        }
-        agentesData.sort((a,b) => new Date(b.latest.FECHA_CREACION) - new Date(a.latest.FECHA_CREACION));
-        
         const tbody = document.getElementById("tbody-contrataciones");
-        tbody.innerHTML = "";
         const container = document.getElementById("contrataciones-btn-container");
+        tbody.innerHTML = "";
         container.innerHTML = "";
-        
-        if(!agentesData.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>Sin registros</td></tr>"; return; }
-        
-        let rowsToShow = agentesData;
-        if(!contratacionesExpandidas && agentesData.length > 6) rowsToShow = agentesData.slice(0,6);
-        
-        for(const item of rowsToShow) {
-            const master = document.createElement("tr"); master.className="interactive-row";
-            const hasHistory = item.history.length > 0;
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
-                                <td class="text-left"><strong>${item.agente}</strong></td>
-                                <td class="text-center">${item.latest.FECHA_CREACION || "-"}</td>
-                                <td class="text-center"><span class="badge-pill-flat pill-active">${item.latest.ESTATUS || "En proceso"}</span></td>
-                                <td class="text-left">${item.latest.UPLINE || "Directo"}</td>
-                                <td class="text-center">${item.latest.CODIGO_NIVEL || "N/A"}</td>`;
-            const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            if(hasHistory) {
-                let historyHtml = `<div class="expanded-detail-card"><div><strong>Procesos anteriores</strong></div><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha</th><th>Tipo Proceso</th><th>Estatus</th><th>Upline</th><th>Nivel</th></tr></thead><tbody>`;
-                for(const h of item.history) {
-                    historyHtml += `<tr><td>${h.FECHA_CREACION||"-"}</td><td>${h.TIPO_PROCESO||"Onboarding"}</td><td>${h.ESTATUS||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td></tr>`;
-                }
-                historyHtml += `</tbody></table></div></div>`;
-                detail.innerHTML = `<td colspan="6">${historyHtml}</td>`;
-            } else {
-                detail.innerHTML = `<td colspan="6"><div class="expanded-detail-card">No hay procesos adicionales</div></td>`;
-            }
-            master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
-            tbody.appendChild(master); tbody.appendChild(detail);
-        }
-        
-        if(agentesData.length > 6) {
-            if(!contratacionesExpandidas) {
-                const btnVerTodos = document.createElement("button");
-                btnVerTodos.textContent = "Ver todos los agentes";
-                btnVerTodos.className = "btn-expand";
-                btnVerTodos.onclick = () => {
-                    contratacionesExpandidas = true;
-                    renderTablaContrataciones();
-                };
-                container.appendChild(btnVerTodos);
-            } else {
-                const btnVerMenos = document.createElement("button");
-                btnVerMenos.textContent = "Mostrar solo 6";
-                btnVerMenos.className = "btn-expand";
-                btnVerMenos.onclick = () => {
-                    contratacionesExpandidas = false;
-                    renderTablaContrataciones();
-                };
-                container.appendChild(btnVerMenos);
-            }
+
+        const search = document.getElementById("search-contrataciones").value.toLowerCase();
+        const records = rawContratacion.filter(r => 
+            r.AGENTE.toLowerCase().includes(search) || 
+            r.UPLINE.toLowerCase().includes(search)
+        );
+
+        const limite = contratacionesExpandidas ? records.length : 6;
+        const visualizacion = records.slice(0, limite);
+
+        visualizacion.forEach(row => {
+            const tr = document.createElement("tr");
+            let badgeClass = "pill-neutral";
+            const est = row.ESTATUS.toUpperCase();
+            if (est.includes("APROBADO")) badgeClass = "pill-active";
+            else if (est.includes("NEW") || est.includes("CREATE")) badgeClass = "pill-pending";
+
+            tr.innerHTML = `
+                <td class="text-center"><i class="fa-solid fa-user-circle text-muted"></i></td>
+                <td class="font-weight-bold">${row.AGENTE}</td>
+                <td class="text-center">${row.TIPO_PROCESO}</td>
+                <td class="text-center"><span class="badge-pill-flat ${badgeClass}">${row.ESTATUS}</span></td>
+                <td>${row.UPLINE || '—'}</td>
+                <td class="text-center"><code>${row.CODIGO_NIVEL || '—'}</code></td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if(records.length > 6) {
+            const btn = document.createElement("button");
+            btn.className = "btn-expand";
+            btn.textContent = contratacionesExpandidas ? "Mostrar menos" : `Ver todas las contrataciones (${records.length})`;
+            btn.onclick = () => { contratacionesExpandidas = !contratacionesExpandidas; renderTablaContrataciones(); };
+            container.appendChild(btn);
         }
     }
 
     function renderTablaJerarquia() {
-        const query = document.getElementById("search-jerarquia").value.toLowerCase();
-        const agenteFiltro = document.getElementById("agent-filter").value;
-        let filtered = rawJerarquia;
-        if(agenteFiltro !== "TODOS") filtered = filtered.filter(r => (r.AGENTE||"") === agenteFiltro);
-        if(query) filtered = filtered.filter(r => (r.AGENTE||"").toLowerCase().includes(query) || (r.UPLINE||"").toLowerCase().includes(query));
-        
-        const groupMap = new Map();
-        for(const rec of filtered) {
-            const agente = rec.AGENTE;
-            if(!groupMap.has(agente)) groupMap.set(agente, []);
-            groupMap.get(agente).push(rec);
-        }
-        let agentesData = [];
-        for(const [agente, registros] of groupMap.entries()) {
-            const sorted = registros.sort((a,b) => new Date(b.FECHA_INGRESO) - new Date(a.FECHA_INGRESO));
-            const latest = sorted[0];
-            const history = sorted.slice(1);
-            agentesData.push({ agente, latest, history });
-        }
-        agentesData.sort((a,b) => (b.latest.FECHA_INGRESO || "").localeCompare(a.latest.FECHA_INGRESO || ""));
-        
         const tbody = document.getElementById("tbody-jerarquia");
-        tbody.innerHTML = "";
         const container = document.getElementById("jerarquia-btn-container");
+        tbody.innerHTML = "";
         container.innerHTML = "";
-        
-        if(!agentesData.length){ tbody.innerHTML="<tr><td colspan='5' class='text-center'>Sin registros de jerarquía</td></tr>"; return; }
-        
-        let rowsToShow = agentesData;
-        if(!jerarquiaExpandidas && agentesData.length > 6) rowsToShow = agentesData.slice(0,6);
-        
-        for(const item of rowsToShow) {
-            const master = document.createElement("tr"); master.className="interactive-row";
-            const hasHistory = item.history.length > 0;
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
-                                <td class="text-left"><strong>${item.agente}</strong></td>
-                                <td class="text-left">${item.latest.ID_PRODUCER}</td>
-                                <td class="text-center">${item.latest.CODIGO_NIVEL}</td>
-                                <td class="text-left">${item.latest.UPLINE}</td>`;
-            const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            if(hasHistory) {
-                let historyHtml = `<div class="expanded-detail-card"><div><strong>Historial de cambios</strong></div><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha Ingreso</th><th>Nivel</th><th>Upline</th><th>NPN Upline</th></tr></thead><tbody>`;
-                for(const h of item.history) {
-                    historyHtml += `<tr><td>${h.FECHA_INGRESO||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.NPN_UPLINE||"-"}</td></tr>`;
-                }
-                historyHtml += `</tbody></table></div></div>`;
-                detail.innerHTML = `<td colspan="5">${historyHtml}</td>`;
-            } else {
-                detail.innerHTML = `<td colspan="5"><div class="expanded-detail-card"><div class="detail-grid">
-                    <div class="detail-field"><span class="field-label">NPN Agente</span><span class="field-value">${item.latest.NPN_AGENTE||"—"}</span></div>
-                    <div class="detail-field"><span class="field-label">Fecha Ingreso</span><span class="field-value">${item.latest.FECHA_INGRESO||"—"}</span></div>
-                    <div class="detail-field"><span class="field-label">NPN Upline</span><span class="field-value">${item.latest.NPN_UPLINE||"—"}</span></div>
-                </div></div></td>`;
-            }
-            master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
-            tbody.appendChild(master); tbody.appendChild(detail);
-        }
-        
-        if(agentesData.length > 6) {
-            if(!jerarquiaExpandidas) {
-                const btnVerTodos = document.createElement("button");
-                btnVerTodos.textContent = "Ver todos los agentes";
-                btnVerTodos.className = "btn-expand";
-                btnVerTodos.onclick = () => {
-                    jerarquiaExpandidas = true;
-                    renderTablaJerarquia();
-                };
-                container.appendChild(btnVerTodos);
-            } else {
-                const btnVerMenos = document.createElement("button");
-                btnVerMenos.textContent = "Mostrar solo 6";
-                btnVerMenos.className = "btn-expand";
-                btnVerMenos.onclick = () => {
-                    jerarquiaExpandidas = false;
-                    renderTablaJerarquia();
-                };
-                container.appendChild(btnVerMenos);
-            }
+
+        const search = document.getElementById("search-jerarquia").value.toLowerCase();
+        const agentVal = document.getElementById("agent-filter").value;
+
+        const records = rawJerarquia.filter(r => {
+            if (agentVal !== "TODOS" && r.AGENTE !== agentVal) return false;
+            return r.AGENTE.toLowerCase().includes(search) || r.UPLINE.toLowerCase().includes(search);
+        });
+
+        const limite = jerarquiaExpandidas ? records.length : 6;
+        const visualizacion = records.slice(0, limite);
+
+        visualizacion.forEach(row => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td class="text-center"><i class="fa-solid fa-network-wired text-muted"></i></td>
+                <td class="font-weight-bold">${row.AGENTE}</td>
+                <td><code>${row.ID_PRODUCER || row.NPN_AGENTE}</code></td>
+                <td class="text-center"><span class="badge-pill-flat pill-neutral">${row.CODIGO_NIVEL}</span></td>
+                <td>${row.UPLINE || 'DIRECTO (Raíz)'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        if(records.length > 6) {
+            const btn = document.createElement("button");
+            btn.className = "btn-expand";
+            btn.textContent = jerarquiaExpandidas ? "Mostrar menos" : `Ver estructura completa (${records.length})`;
+            btn.onclick = () => { jerarquiaExpandidas = !jerarquiaExpandidas; renderTablaJerarquia(); };
+            container.appendChild(btn);
         }
     }
 
     function renderTablaPagosAgrupados() {
-        const query = document.getElementById("search-pagos").value.toLowerCase();
-        const trackingFilter = document.getElementById("payment-tracking-filter").value;
-        let filteredPagos = rawPagos.filter(p => !query || (p.CLIENTE||"").toLowerCase().includes(query) || (p.CODIGO_POLIZA||"").toLowerCase().includes(query));
-        const groups = new Map();
-        for(const pago of filteredPagos){
-            const codigo = pago.CODIGO_POLIZA;
-            if(!codigo) continue;
-            if(!groups.has(codigo)) groups.set(codigo, { rows:[], cliente:pago.CLIENTE, idProducto:pago.ID_PRODUCTO, numTrans:0, latestPaidUntil:null, trackingValues:new Set() });
-            const g = groups.get(codigo);
-            g.rows.push(pago);
-            g.numTrans++;
-            if(!g.cliente && pago.CLIENTE) g.cliente = pago.CLIENTE;
-            if(!g.idProducto && pago.ID_PRODUCTO) g.idProducto = pago.ID_PRODUCTO;
-            if(pago.SEGUIMIENTO_PAGO) g.trackingValues.add(pago.SEGUIMIENTO_PAGO);
-            let paidDate = null;
-            if(pago.PAGADO_HASTA){
-                let d = new Date(pago.PAGADO_HASTA);
-                if(isNaN(d)){ const parts = pago.PAGADO_HASTA.split(/[-/]/); if(parts.length===3) d = new Date(parts[2], parts[1]-1, parts[0]); }
-                if(!isNaN(d) && (!g.latestPaidUntil || d > g.latestPaidUntil)) g.latestPaidUntil = d;
-            }
-        }
-        let filteredGroups = Array.from(groups.entries());
-        if(trackingFilter !== "TODOS") filteredGroups = filteredGroups.filter(([_,g]) => g.trackingValues.has(trackingFilter));
-        
-        let rowsToShow = filteredGroups;
-        if(!pagosExpandidos && filteredGroups.length > 6) rowsToShow = filteredGroups.slice(0,6);
-        
-        const tbody = document.getElementById("tbody-pagos-agrupados"); tbody.innerHTML = "";
+        const tbody = document.getElementById("tbody-pagos-agrupados");
         const container = document.getElementById("pagos-btn-container");
+        tbody.innerHTML = "";
         container.innerHTML = "";
-        
-        if(!rowsToShow.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>Sin registros de pagos</td></tr>"; return; }
-        
-        for(const [codigo, group] of rowsToShow){
-            const paidStr = group.latestPaidUntil ? group.latestPaidUntil.toISOString().split('T')[0] : "—";
-            const master = document.createElement("tr"); master.className="interactive-row";
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left">${group.cliente||"—"}</td><td class="text-left"><code>${codigo}</code></td><td class="text-left">${group.idProducto||"—"}</td><td class="text-left">${paidStr}</td><td class="text-center">${group.numTrans}</td>`;
-            const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            const sortedRows = [...group.rows].sort((a,b) => {
-                const dateA = a.PAGADO_HASTA ? new Date(a.PAGADO_HASTA) : new Date(0);
-                const dateB = b.PAGADO_HASTA ? new Date(b.PAGADO_HASTA) : new Date(0);
-                return dateB - dateA;
-            });
-            let inner = `<div class="expanded-detail-card" style="flex-direction:column; gap:12px;"><div><strong>Detalle de transacciones para la póliza ${codigo}</strong></div><div class="overflow-wrapper" style="max-height:300px;"><table class="inner-payment-table"><thead><tr><th class="text-left">Pagado Hasta</th><th class="text-left">Estatus Pago</th><th class="text-left">Método Pago</th><th class="text-right">Prima</th><th class="text-left">Seguimiento</th></tr></thead><tbody>`;
-            for(const t of sortedRows){
-                const prima = parseFloat(t.PRIMA.replace(/[^0-9.-]/g,""));
-                inner += `<tr><td class="text-left">${t.PAGADO_HASTA||"—"}</td><td class="text-left"><span class="badge-pill-flat ${t.ESTATUS==='Pagado'?'pill-active':'pill-pending'}">${t.ESTATUS||"—"}</span></td><td class="text-left">${t.METODO_PAGO||"—"}</td><td class="text-right">${formatCurrencyNoSymbol(prima)}</td><td class="text-left">${t.SEGUIMIENTO_PAGO||"—"}</td></tr>`;
-            }
-            inner += `</tbody></table></div></div>`;
-            detail.innerHTML = `<td colspan="6">${inner}</td>`;
-            master.addEventListener("click",(e)=>{ e.stopPropagation(); const open = detail.style.display==="table-row"; detail.style.display = open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open); });
-            tbody.appendChild(master); tbody.appendChild(detail);
+
+        const search = document.getElementById("search-pagos").value.toLowerCase();
+        const trackingFilter = document.getElementById("payment-tracking-filter").value;
+        const agentVal = document.getElementById("agent-filter").value;
+
+        let polizasDelAgente = null;
+        if (agentVal !== "TODOS") {
+            polizasDelAgente = new Set(
+                rawProduccion.filter(p => p.AGENTE === agentVal).map(p => p.CODIGO_POLIZA).filter(Boolean)
+            );
         }
-        
-        if(filteredGroups.length > 6) {
-            if(!pagosExpandidos) {
-                const btnVerTodos = document.createElement("button");
-                btnVerTodos.textContent = "Ver todos los registros";
-                btnVerTodos.className = "btn-expand";
-                btnVerTodos.onclick = () => {
-                    pagosExpandidos = true;
-                    renderTablaPagosAgrupados();
+
+        const filtrados = rawPagos.filter(r => {
+            if (trackingFilter !== "TODOS" && r.SEGUIMIENTO_PAGO !== trackingFilter) return false;
+            if (polizasDelAgente && !polizasDelAgente.has(r.CODIGO_POLIZA)) return false;
+            return r.CLIENTE.toLowerCase().includes(search) || r.CODIGO_POLIZA.toLowerCase().includes(search);
+        });
+
+        const grupos = {};
+        filtrados.forEach(row => {
+            const clave = `${row.CLIENTE}|||${row.CODIGO_POLIZA}|||${row.ID_PRODUCTO}`;
+            if (!grupos[clave]) {
+                grupos[clave] = {
+                    CLIENTE: row.CLIENTE,
+                    CODIGO_POLIZA: row.CODIGO_POLIZA,
+                    ID_PRODUCTO: row.ID_PRODUCTO,
+                    TRANSACCIONES: []
                 };
-                container.appendChild(btnVerTodos);
-            } else {
-                const btnVerMenos = document.createElement("button");
-                btnVerMenos.textContent = "Mostrar solo 6";
-                btnVerMenos.className = "btn-expand";
-                btnVerMenos.onclick = () => {
-                    pagosExpandidos = false;
-                    renderTablaPagosAgrupados();
-                };
-                container.appendChild(btnVerMenos);
             }
+            grupos[clave].TRANSACCIONES.push(row);
+        });
+
+        const filteredGroups = Object.values(grupos);
+        const limite = pagosExpandidos ? filteredGroups.length : 6;
+        const visualizacion = filteredGroups.slice(0, limite);
+
+        visualizacion.forEach(g => {
+            const master = document.createElement("tr");
+            master.className = "interactive-row";
+
+            let totalPagado = 0;
+            g.TRANSACCIONES.forEach(t => {
+                if(t.ESTATUS.toUpperCase() === "PAGADO") {
+                    totalPagado += parseFloat(t.PRIMA.toString().replace(/[^0-9.-]/g, '')) || 0;
+                }
+            });
+
+            master.innerHTML = `
+                <td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-chevron-right"></i></button></td>
+                <td class="font-weight-bold">${g.CLIENTE}</td>
+                <td><code>${g.CODIGO_POLIZA}</code></td>
+                <td>${g.ID_PRODUCTO}</td>
+                <td class="text-right font-weight-bold" style="color: var(--success);">$ ${formatCurrencyNoSymbol(totalPagado)}</td>
+                <td class="text-center"><span class="badge-pill-flat pill-active">${g.TRANSACCIONES.length} reg.</span></td>
+            `;
+
+            const detail = document.createElement("tr");
+            detail.className = "accordion-hidden-row";
+
+            let trsInternas = "";
+            g.TRANSACCIONES.forEach(t => {
+                let badge = "pill-neutral";
+                const estTrans = t.ESTATUS.toUpperCase();
+                if(estTrans === "PAGADO") badge = "pill-active";
+                else if(estTrans.includes("AUTO") || estTrans.includes("REV")) badge = "pill-failed";
+
+                trsInternas += `
+                    <tr>
+                        <td class="text-center"><code>${t.ACTIVACION || '—'}</code></td>
+                        <td class="text-center"><code>${t.PAGADO_HASTA || '—'}</code></td>
+                        <td>${t.METODO_PAGO || '—'}</td>
+                        <td class="text-right font-weight-bold">$ ${formatCurrencyNoSymbol(parseFloat(t.PRIMA.toString().replace(/[^0-9.-]/g, '')) || 0)}</td>
+                        <td class="text-center"><span class="badge-pill-flat ${badge}">${t.ESTATUS}</span></td>
+                        <td><span class="badge-pill-flat pill-neutral" style="font-size:0.6rem;">${t.SEGUIMIENTO_PAGO || 'Sin clasificar'}</span></td>
+                    </tr>
+                `;
+            });
+
+            detail.innerHTML = `
+                <td colspan="6">
+                    <div class="expanded-detail-card" style="margin: 8px 16px; padding: 14px;">
+                        <h4 style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:10px;"><i class="fa-solid fa-history"></i> Desglose de Amortizaciones e Historial de Cobros</h4>
+                        <table class="inner-payment-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Fecha Trans.</th>
+                                    <th class="text-center">Cobertura Hasta</th>
+                                    <th class="text-left">Método</th>
+                                    <th class="text-right">Monto</th>
+                                    <th class="text-center">Estatus</th>
+                                    <th class="text-left">Acción Seguimiento</th>
+                                </tr>
+                            </thead>
+                            <tbody>${trsInternas}</tbody>
+                        </table>
+                    </div>
+                </td>
+            `;
+
+            master.onclick = () => {
+                const open = detail.style.display === "table-row";
+                detail.style.display = open ? "none" : "table-row";
+                master.classList.toggle("row-expanded-state", !open);
+            };
+
+            tbody.appendChild(master);
+            tbody.appendChild(detail);
+        });
+
+        if(filteredGroups.length > 6) {
+            const btn = document.createElement("button");
+            btn.className = "btn-expand";
+            btn.textContent = pagosExpandidos ? "Mostrar menos" : `Ver todos los registros de pagos (${filteredGroups.length})`;
+            btn.onclick = () => { pagosExpandidos = !pagosExpandidos; renderTablaPagosAgrupados(); };
+            container.appendChild(btn);
         }
     }
 
     function showLoader(v) { document.getElementById("loader-overlay").style.display = v ? "flex" : "none"; }
-    function mostrarErrorGlobal() { document.getElementById("error-banner").style.display = "block"; setTimeout(()=>document.getElementById("error-banner").style.display="none",5000); }
+    function mostrarErrorGlobal() { document.getElementById("error-banner").style.display = "block"; setTimeout(()=>document.getElementById("error-banner").style.display="none",6000); }
     function ocultarError() { document.getElementById("error-banner").style.display = "none"; }
 </script>
 </body>
