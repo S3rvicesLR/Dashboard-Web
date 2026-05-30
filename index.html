@@ -565,7 +565,7 @@
 <body>
 
 <div id="error-banner">
-    <i class="fas fa-exclamation-triangle"></i> Error crítico al cargar fuentes de datos. Verifique que el archivo 'Actu_DataCompleta.xlsx' se encuentre en la carpeta raíz del repositorio.
+    <i class="fas fa-exclamation-triangle"></i> Error crítico al cargar fuentes de datos. Verifique que el archivo 'Auto_DataCompleta.xlsx' se encuentre en la carpeta raíz del repositorio.
 </div>
 
 <div id="loader-overlay">
@@ -721,8 +721,8 @@
 </div>
 
 <script>
-    // --- ÚNICA FUENTE DE DATOS: Tu archivo local Excel cargado en tu repositorio ---
-    const URL_EXCEL_LOCAL = "./Actu_DataCompleta.xlsx";
+    // --- ÚNICA FUENTE DE DATOS: archivo Excel en el repositorio ---
+    const URL_EXCEL_LOCAL = "./Auto_DataCompleta.xlsx";
 
     let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [];
     let filteredProduccion = [];
@@ -817,18 +817,15 @@
         try {
             showLoader(true);
             ocultarError();
-            console.log("Cargando libro de datos unificado de forma local...");
+            console.log("Cargando datos desde Auto_DataCompleta.xlsx ...");
 
-            // Petición al archivo local
             const response = await fetch(URL_EXCEL_LOCAL);
             if (!response.ok) throw new Error(`No se pudo leer el archivo local. Código de estado: ${response.status}`);
             
             const arrayBuffer = await response.arrayBuffer();
             const libroExcel = XLSX.read(arrayBuffer, { type: 'array' });
 
-            // --- PROCESAMIENTO DINÁMICO DE PESTAÑAS DEL EXCEL ---
-            
-            // 1. Pestaña Producción
+            // 1. Pestaña Produccion
             const hojaProd = libroExcel.Sheets["Produccion"];
             if (hojaProd) {
                 const jsonProd = XLSX.utils.sheet_to_json(hojaProd);
@@ -910,9 +907,7 @@
         } catch (err) {
             console.error("Error crítico cargando el archivo Excel:", err);
             mostrarErrorGlobal();
-            // Eliminado por completo cualquier volcado de datos Mock. 
-            // Si falla la carga, el dashboard no dibuja datos mentirosos.
-        </div> finally {
+        } finally {
             showLoader(false);
         }
     }
