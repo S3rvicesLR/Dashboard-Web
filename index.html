@@ -121,7 +121,6 @@
             width: calc(100% - 280px);
         }
 
-        /* --- DISEÑO RESPONSIVO (MÓVIL Y TABLETA) --- */
         @media (max-width: 1150px) {
             .app-container { flex-direction: column; }
             .sidebar { width: 100%; height: auto; position: relative; padding: 20px; }
@@ -245,7 +244,6 @@
             color: white;
         }
 
-        /* --- FILAS KPI CORREGIDAS --- */
         .kpi-row-clean {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -294,7 +292,6 @@
             gap: 5px;
         }
 
-        /* --- CONTENEDOR DE GRÁFICAS MEJORADO (SOLUCIÓN ALTURA) --- */
         .visual-matrix {
             display: grid;
             grid-template-columns: 1.4fr 1fr;
@@ -324,7 +321,7 @@
 
         .canvas-holder {
             position: relative;
-            height: 320px; /* Altura fija óptima para que no colapse ni se agigante */
+            height: 320px;
             width: 100%;
         }
 
@@ -408,7 +405,6 @@
             font-size: 0.8rem;
         }
 
-        /* --- ARREGLO DE ALINEACIÓN DE TABLAS NATIVAS --- */
         .overflow-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -418,7 +414,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            min-width: 500px; /* Previene compresión destructiva en móvil */
+            min-width: 500px;
         }
 
         th {
@@ -445,7 +441,6 @@
             background: #F8FAFE;
         }
 
-        /* Clases globales de alineación estricta para TH y TD */
         .text-right { text-align: right !important; }
         .text-center { text-align: center !important; }
         .text-left { text-align: left !important; }
@@ -533,6 +528,37 @@
             background: #F1F5F9;
             color: #2c3e50;
         }
+
+        .btn-expand {
+            background: none;
+            border: 1px solid var(--border-flat);
+            color: var(--brand-primary);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 16px;
+            margin: 12px 16px;
+            width: calc(100% - 32px);
+            text-align: center;
+            background: #F0F4F9;
+            border-radius: 30px;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        .btn-expand:hover {
+            background: var(--brand-primary);
+            color: white;
+            border-color: var(--brand-primary);
+        }
+        .btn-group-expand {
+            display: flex;
+            gap: 12px;
+            padding: 0 16px 16px 16px;
+        }
+        .btn-group-expand .btn-expand {
+            margin: 0;
+            width: auto;
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -607,17 +633,10 @@
         <div class="section-separator">🏆 Rendimiento y Mix Comercial</div>
         <div class="grid-split-tables">
             <div class="block-table-card">
-                <div class="table-toolbar-top"><h3>Top 10 Agentes</h3></div>
+                <div class="table-toolbar-top"><h3>Top 5 Agentes</h3></div>
                 <div class="overflow-wrapper">
                     <table>
-                        <thead>
-                            <tr>
-                                <th class="text-center" style="width: 50px;">#</th>
-                                <th class="text-left">Asesor</th>
-                                <th class="text-right">NAP</th>
-                                <th class="text-right">Persistencia</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th class="text-center">#</th><th class="text-left">Asesor</th><th class="text-right">NAP</th><th class="text-right">Persistencia</th></tr></thead>
                         <tbody id="tbody-top-agentes"></tbody>
                     </table>
                 </div>
@@ -626,14 +645,7 @@
                 <div class="table-toolbar-top"><h3>Distribución por Línea</h3></div>
                 <div class="overflow-wrapper">
                     <table>
-                        <thead>
-                            <tr>
-                                <th class="text-left">Producto</th>
-                                <th class="text-center">Volumen</th>
-                                <th class="text-right">NAP Total</th>
-                                <th class="text-right">Share</th>
-                            </tr>
-                        </thead>
+                        <thead><tr><th class="text-left">Producto</th><th class="text-center">Volumen</th><th class="text-right">NAP Total</th><th class="text-right">Share</th></tr></thead>
                         <tbody id="tbody-productos"></tbody>
                     </table>
                 </div>
@@ -648,19 +660,11 @@
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="text-center" style="width: 50px;"></th>
-                            <th class="text-left">Agente</th>
-                            <th class="text-left">Producto</th>
-                            <th class="text-left">Código Póliza</th>
-                            <th class="text-right">NAP</th>
-                            <th class="text-center">Estatus</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Agente</th><th class="text-left">Producto</th><th class="text-left">Código Póliza</th><th class="text-right">NAP</th><th class="text-center">Estatus</th></tr></thead>
                     <tbody id="tbody-detallado-polizas"></tbody>
                 </table>
             </div>
+            <div id="polizas-btn-container" class="btn-group-expand"></div>
         </div>
 
         <div class="section-separator">📋 Contrataciones</div>
@@ -671,19 +675,11 @@
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="text-left">Agente</th>
-                            <th class="text-center">Creación</th>
-                            <th class="text-left">Estructura</th>
-                            <th class="text-center">Estatus Trámite</th>
-                            <th class="text-left">Upline</th>
-                            <th class="text-center">Nivel</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Agente</th><th class="text-center">Último proceso</th><th class="text-center">Estatus actual</th><th class="text-left">Upline</th><th class="text-center">Nivel</th></tr></thead>
                     <tbody id="tbody-contrataciones"></tbody>
                 </table>
             </div>
+            <div id="contrataciones-btn-container" class="btn-group-expand"></div>
         </div>
 
         <div class="section-separator">🏢 Jerarquía</div>
@@ -694,18 +690,11 @@
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="text-center" style="width: 50px;"></th>
-                            <th class="text-left">Agente</th>
-                            <th class="text-left">ID Producer</th>
-                            <th class="text-center">Nivel</th>
-                            <th class="text-left">Upline</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Agente</th><th class="text-left">ID Producer</th><th class="text-center">Nivel actual</th><th class="text-left">Upline</th></tr></thead>
                     <tbody id="tbody-jerarquia"></tbody>
                 </table>
             </div>
+            <div id="jerarquia-btn-container" class="btn-group-expand"></div>
         </div>
 
         <div class="section-separator">💰 Seguimiento Pagos</div>
@@ -721,34 +710,32 @@
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead>
-                        <tr>
-                            <th class="text-center" style="width: 50px;"></th>
-                            <th class="text-left">Cliente</th>
-                            <th class="text-left">Código Póliza</th>
-                            <th class="text-left">ID Producto</th>
-                            <th class="text-left">Pagado</th>
-                            <th class="text-center"># Transacciones</th>
-                        </tr>
-                    </thead>
+                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Cliente</th><th class="text-left">Código Póliza</th><th class="text-left">ID Producto</th><th class="text-left">Pagado</th><th class="text-center"># Transacciones</th></tr></thead>
                     <tbody id="tbody-pagos-agrupados"></tbody>
                 </table>
             </div>
+            <div id="pagos-btn-container" class="btn-group-expand"></div>
         </div>
     </main>
 </div>
 
 <script>
-    // --- NUEVAS URLS CON LOS GID ACTUALIZADOS ---
-    const URL_PRODUCCION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1440769936&single=true&output=csv";
-    const URL_CONTRATACION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1101435016&single=true&output=csv";
-    const URL_JERARQUIA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1868393031&single=true&output=csv";
-    const URL_PAGOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=835664957&single=true&output=csv";
+    // --- NUEVAS URLS ACTUALIZADAS ---
+    const URL_PRODUCCION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=285037414&single=true&output=csv";
+    const URL_CONTRATACION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1740923115&single=true&output=csv";
+    const URL_JERARQUIA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=678161413&single=true&output=csv";
+    const URL_PAGOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1653343233&single=true&output=csv";
 
     let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [];
     let filteredProduccion = [];
     let chartMonthly = null, chartStatus = null;
     let datePicker = null;
+
+    // Estados de expansión
+    let polizasExpandidas = false;
+    let contratacionesExpandidas = false;
+    let jerarquiaExpandidas = false;
+    let pagosExpandidos = false;
 
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 1 }).format(val / 100);
@@ -772,21 +759,22 @@
     });
 
     function initControls() {
-        datePicker = flatpickr("#date-range-picker", { mode: "range", dateFormat: "Y-m-d", locale: "es", onChange: () => aplicarFiltros() });
-        document.getElementById("status-filter").addEventListener("change", () => aplicarFiltros());
-        document.getElementById("product-filter").addEventListener("change", () => aplicarFiltros());
+        datePicker = flatpickr("#date-range-picker", { mode: "range", dateFormat: "Y-m-d", locale: "es", onChange: () => { resetearExpansiones(); aplicarFiltros(); } });
+        document.getElementById("status-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
+        document.getElementById("product-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
         document.getElementById("agent-filter").addEventListener("change", () => { aplicarFiltros(); renderTablaJerarquia(); renderTablaPagosAgrupados(); });
-        document.getElementById("payment-tracking-filter").addEventListener("change", () => renderTablaPagosAgrupados());
-        document.getElementById("search-polizas").addEventListener("input", () => renderTablaPolizasDetalle());
-        document.getElementById("search-contrataciones").addEventListener("input", () => renderTablaContrataciones());
-        document.getElementById("search-jerarquia").addEventListener("input", () => renderTablaJerarquia());
-        document.getElementById("search-pagos").addEventListener("input", () => renderTablaPagosAgrupados());
+        document.getElementById("payment-tracking-filter").addEventListener("change", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
+        document.getElementById("search-polizas").addEventListener("input", () => { polizasExpandidas = false; renderTablaPolizasDetalle(); });
+        document.getElementById("search-contrataciones").addEventListener("input", () => { contratacionesExpandidas = false; renderTablaContrataciones(); });
+        document.getElementById("search-jerarquia").addEventListener("input", () => { jerarquiaExpandidas = false; renderTablaJerarquia(); });
+        document.getElementById("search-pagos").addEventListener("input", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
             document.getElementById("status-filter").value = "TODAS";
             document.getElementById("product-filter").value = "TODOS";
             document.getElementById("agent-filter").value = "TODOS";
             document.getElementById("payment-tracking-filter").value = "TODOS";
             datePicker.clear();
+            resetearExpansiones();
             if (rawProduccion.length) establecerRangoFechaDefault();
             aplicarFiltros();
             renderTablaJerarquia();
@@ -795,6 +783,13 @@
         document.getElementById("btn-refresh-data").addEventListener("click", async () => {
             await cargarFuentesExternas();
         });
+    }
+
+    function resetearExpansiones() {
+        polizasExpandidas = false;
+        contratacionesExpandidas = false;
+        jerarquiaExpandidas = false;
+        pagosExpandidos = false;
     }
 
     async function cargarFuentesExternas() {
@@ -834,10 +829,12 @@
             { AGENTE: "Carlos López", PRODUCTO: "Auto", PRIMA_NAP: "800", CODIGO_POLIZA: "POL003", EMISION: "2025-01-20", ACTIVACION: "2025-01-25", ESTATUS: "Pendiente", ESTADO: "California", CLIENTE: "Roberto Sánchez", DIRECCION: "Boulevard 789", CIUDAD: "Los Ángeles", ZIP_CODE: "90001", TELEFONO: "213-555-9012", ID_PRODUCER: "ID001" }
         ];
         rawContratacion = [
-            { AGENTE: "Carlos López", FECHA_CREACION: "2025-01-01", TIPO_PROCESO: "Onboarding", ESTATUS: "Completado", UPLINE: "Directo", CODIGO_NIVEL: "N1" }
+            { AGENTE: "Carlos López", FECHA_CREACION: "2025-01-01", TIPO_PROCESO: "Onboarding", ESTATUS: "Completado", UPLINE: "Directo", CODIGO_NIVEL: "N1" },
+            { AGENTE: "Carlos López", FECHA_CREACION: "2025-02-15", TIPO_PROCESO: "Renovación", ESTATUS: "En revisión", UPLINE: "Regional", CODIGO_NIVEL: "N2" }
         ];
         rawJerarquia = [
-            { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-01-01", CODIGO_NIVEL: "1", NPN_UPLINE: "NPN000", UPLINE: "Admin" }
+            { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-01-01", CODIGO_NIVEL: "1", NPN_UPLINE: "NPN000", UPLINE: "Admin" },
+            { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-03-01", CODIGO_NIVEL: "2", NPN_UPLINE: "NPN001", UPLINE: "Supervisor" }
         ];
         rawPagos = [
             { CLIENTE: "Juan Pérez", CODIGO_POLIZA: "POL001", ID_PRODUCTO: "VIDA01", A_COBRAR: "1500", PAGADO_HASTA: "2025-02-28", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Transferencia", PRIMA: "1500", PORC_COMISION: "10", SEGURO_COBRO: "No", ADVANCE: "0", "SOURCE.NAME": "CRM_Ventas" }
@@ -851,6 +848,7 @@
         renderTablaPagosAgrupados();
     }
 
+    // Funciones de parseo
     function parseCSVGeneral(csvText) {
         const rows = []; let inQuote = false; let row = []; let field = "";
         for (let i = 0; i < csvText.length; i++) {
@@ -977,7 +975,7 @@
         actualizarKPIs(); renderGraficos(); renderTopAgentes(); renderTablaProductosShare(); renderTablaPolizasDetalle(); renderTablaJerarquia(); renderTablaPagosAgrupados();
     }
 
-    function actualizarKPIs() {
+    function actualizarKPIs() { 
         let napTotal = 0; const agentesSet = new Set(); const estadosCont = {};
         filteredProduccion.forEach(row => {
             const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
@@ -1022,7 +1020,7 @@
         chartStatus = new Chart(ctxBar, { type:'bar', data:{ labels:Object.keys(estMap), datasets:[{ data:Object.values(estMap), backgroundColor:colors, borderRadius:6, barPercentage:0.6 }] }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } });
     }
 
-    function renderTopAgentes() {
+    function renderTopAgentes() { 
         const agentes = {};
         filteredProduccion.forEach(row => {
             const nom = row.AGENTE; if(!nom) return;
@@ -1033,7 +1031,7 @@
             if(!isNaN(nap)) agentes[nom].nap += nap;
             if(est==="TERMINADA"||est==="SUSPENDIDA") agentes[nom].terminadas++;
         });
-        const top = Object.entries(agentes).sort((a,b)=>b[1].nap - a[1].nap).slice(0,10);
+        const top = Object.entries(agentes).sort((a,b)=>b[1].nap - a[1].nap).slice(0,5);
         const tbody = document.getElementById("tbody-top-agentes");
         tbody.innerHTML = "";
         if(!top.length){ tbody.innerHTML="<tr><td colspan='4' class='text-center'>Sin información</td></tr>"; return; }
@@ -1065,10 +1063,21 @@
 
     function renderTablaPolizasDetalle() {
         const query = document.getElementById("search-polizas").value.toLowerCase();
-        const tbody = document.getElementById("tbody-detallado-polizas"); tbody.innerHTML = "";
-        const source = filteredProduccion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.CLIENTE||"").toLowerCase().includes(query) || (r.CODIGO_POLIZA||"").toLowerCase().includes(query));
-        if(!source.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>No hay coincidencias</td></tr>"; return; }
-        source.forEach(row => {
+        let source = filteredProduccion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.CLIENTE||"").toLowerCase().includes(query) || (r.CODIGO_POLIZA||"").toLowerCase().includes(query));
+        const tbody = document.getElementById("tbody-detallado-polizas");
+        tbody.innerHTML = "";
+        const container = document.getElementById("polizas-btn-container");
+        container.innerHTML = "";
+        
+        if(!source.length){ 
+            tbody.innerHTML="<tr><td colspan='6' class='text-center'>No hay coincidencias</td></tr>"; 
+            return; 
+        }
+        
+        let rowsToShow = source;
+        if(!polizasExpandidas && source.length > 6) rowsToShow = source.slice(0,6);
+        
+        rowsToShow.forEach(row => {
             const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
             const estRaw = row.ESTATUS || "PENDIENTE";
             let pill = "pill-neutral";
@@ -1078,7 +1087,6 @@
             else if(up==="TERMINADA"||up==="SUSPENDIDA") pill="pill-failed";
             const master = document.createElement("tr"); master.className="interactive-row";
             master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left">${row.AGENTE||"N/A"}</td><td class="text-left">${row.PRODUCTO||"-"}</td><td class="text-left"><code>${row.CODIGO_POLIZA||"N/A"}</code></td><td class="text-right">${formatCurrencyNoSymbol(nap)}</td><td class="text-center"><span class="badge-pill-flat ${pill}">${estRaw}</span></td>`;
-            const fechaActivacion = row.ACTIVACION || "—";
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
             detail.innerHTML = `<td colspan="6"><div class="expanded-detail-card"><div class="detail-grid">
                 <div class="detail-field"><span class="field-label"><i class="fa-regular fa-user"></i> Asegurado</span><span class="field-value">${row.CLIENTE||"—"}</span></div>
@@ -1092,18 +1100,103 @@
             master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
             tbody.appendChild(master); tbody.appendChild(detail);
         });
+        
+        if(source.length > 6) {
+            if(!polizasExpandidas) {
+                const btnVerTodos = document.createElement("button");
+                btnVerTodos.textContent = "Ver todas las pólizas";
+                btnVerTodos.className = "btn-expand";
+                btnVerTodos.onclick = () => {
+                    polizasExpandidas = true;
+                    renderTablaPolizasDetalle();
+                };
+                container.appendChild(btnVerTodos);
+            } else {
+                const btnVerMenos = document.createElement("button");
+                btnVerMenos.textContent = "Mostrar solo 6";
+                btnVerMenos.className = "btn-expand";
+                btnVerMenos.onclick = () => {
+                    polizasExpandidas = false;
+                    renderTablaPolizasDetalle();
+                };
+                container.appendChild(btnVerMenos);
+            }
+        }
     }
 
     function renderTablaContrataciones() {
         const query = document.getElementById("search-contrataciones").value.toLowerCase();
-        const tbody = document.getElementById("tbody-contrataciones"); tbody.innerHTML = "";
-        const filtered = rawContratacion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.UPLINE||"").toLowerCase().includes(query));
-        if(!filtered.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>Sin registros</td></tr>"; return; }
-        filtered.forEach(r => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td class="text-left"><strong>${r.AGENTE||"N/A"}</strong></td><td class="text-center">${r.FECHA_CREACION||"-"}</td><td class="text-left">${r.TIPO_PROCESO||"Onboarding"}</td><td class="text-center"><span class="badge-pill-flat pill-active">${r.ESTATUS||"En proceso"}</span></td><td class="text-left">${r.UPLINE||"Directo"}</td><td class="text-center">${r.CODIGO_NIVEL||"N/A"}</td>`;
-            tbody.appendChild(tr);
-        });
+        let filtered = rawContratacion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.UPLINE||"").toLowerCase().includes(query));
+        const groupMap = new Map();
+        for(const rec of filtered) {
+            const agente = rec.AGENTE;
+            if(!groupMap.has(agente)) groupMap.set(agente, []);
+            groupMap.get(agente).push(rec);
+        }
+        let agentesData = [];
+        for(const [agente, registros] of groupMap.entries()) {
+            const sorted = registros.sort((a,b) => new Date(b.FECHA_CREACION) - new Date(a.FECHA_CREACION));
+            const latest = sorted[0];
+            const history = sorted.slice(1);
+            agentesData.push({ agente, latest, history });
+        }
+        agentesData.sort((a,b) => new Date(b.latest.FECHA_CREACION) - new Date(a.latest.FECHA_CREACION));
+        
+        const tbody = document.getElementById("tbody-contrataciones");
+        tbody.innerHTML = "";
+        const container = document.getElementById("contrataciones-btn-container");
+        container.innerHTML = "";
+        
+        if(!agentesData.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>Sin registros</td></tr>"; return; }
+        
+        let rowsToShow = agentesData;
+        if(!contratacionesExpandidas && agentesData.length > 6) rowsToShow = agentesData.slice(0,6);
+        
+        for(const item of rowsToShow) {
+            const master = document.createElement("tr"); master.className="interactive-row";
+            const hasHistory = item.history.length > 0;
+            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
+                                <td class="text-left"><strong>${item.agente}</strong></td>
+                                <td class="text-center">${item.latest.FECHA_CREACION || "-"}</td>
+                                <td class="text-center"><span class="badge-pill-flat pill-active">${item.latest.ESTATUS || "En proceso"}</span></td>
+                                <td class="text-left">${item.latest.UPLINE || "Directo"}</td>
+                                <td class="text-center">${item.latest.CODIGO_NIVEL || "N/A"}</td>`;
+            const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
+            if(hasHistory) {
+                let historyHtml = `<div class="expanded-detail-card"><div><strong>Procesos anteriores</strong></div><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha</th><th>Tipo Proceso</th><th>Estatus</th><th>Upline</th><th>Nivel</th></tr></thead><tbody>`;
+                for(const h of item.history) {
+                    historyHtml += `<tr><td>${h.FECHA_CREACION||"-"}</td><td>${h.TIPO_PROCESO||"Onboarding"}</td><td>${h.ESTATUS||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td></tr>`;
+                }
+                historyHtml += `</tbody></table></div></div>`;
+                detail.innerHTML = `<td colspan="6">${historyHtml}</td>`;
+            } else {
+                detail.innerHTML = `<td colspan="6"><div class="expanded-detail-card">No hay procesos adicionales</div></td>`;
+            }
+            master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
+            tbody.appendChild(master); tbody.appendChild(detail);
+        }
+        
+        if(agentesData.length > 6) {
+            if(!contratacionesExpandidas) {
+                const btnVerTodos = document.createElement("button");
+                btnVerTodos.textContent = "Ver todos los agentes";
+                btnVerTodos.className = "btn-expand";
+                btnVerTodos.onclick = () => {
+                    contratacionesExpandidas = true;
+                    renderTablaContrataciones();
+                };
+                container.appendChild(btnVerTodos);
+            } else {
+                const btnVerMenos = document.createElement("button");
+                btnVerMenos.textContent = "Mostrar solo 6";
+                btnVerMenos.className = "btn-expand";
+                btnVerMenos.onclick = () => {
+                    contratacionesExpandidas = false;
+                    renderTablaContrataciones();
+                };
+                container.appendChild(btnVerMenos);
+            }
+        }
     }
 
     function renderTablaJerarquia() {
@@ -1112,22 +1205,83 @@
         let filtered = rawJerarquia;
         if(agenteFiltro !== "TODOS") filtered = filtered.filter(r => (r.AGENTE||"") === agenteFiltro);
         if(query) filtered = filtered.filter(r => (r.AGENTE||"").toLowerCase().includes(query) || (r.UPLINE||"").toLowerCase().includes(query));
-        const tbody = document.getElementById("tbody-jerarquia"); tbody.innerHTML = "";
-        if(!filtered.length){ tbody.innerHTML="<tr><td colspan='5' class='text-center'>Sin registros de jerarquía</td></tr>"; return; }
-        filtered.forEach(r => {
+        
+        const groupMap = new Map();
+        for(const rec of filtered) {
+            const agente = rec.AGENTE;
+            if(!groupMap.has(agente)) groupMap.set(agente, []);
+            groupMap.get(agente).push(rec);
+        }
+        let agentesData = [];
+        for(const [agente, registros] of groupMap.entries()) {
+            const sorted = registros.sort((a,b) => new Date(b.FECHA_INGRESO) - new Date(a.FECHA_INGRESO));
+            const latest = sorted[0];
+            const history = sorted.slice(1);
+            agentesData.push({ agente, latest, history });
+        }
+        agentesData.sort((a,b) => (b.latest.FECHA_INGRESO || "").localeCompare(a.latest.FECHA_INGRESO || ""));
+        
+        const tbody = document.getElementById("tbody-jerarquia");
+        tbody.innerHTML = "";
+        const container = document.getElementById("jerarquia-btn-container");
+        container.innerHTML = "";
+        
+        if(!agentesData.length){ tbody.innerHTML="<tr><td colspan='5' class='text-center'>Sin registros de jerarquía</td></tr>"; return; }
+        
+        let rowsToShow = agentesData;
+        if(!jerarquiaExpandidas && agentesData.length > 6) rowsToShow = agentesData.slice(0,6);
+        
+        for(const item of rowsToShow) {
             const master = document.createElement("tr"); master.className="interactive-row";
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left"><strong>${r.AGENTE}</strong></td><td class="text-left">${r.ID_PRODUCER}</td><td class="text-center">${r.CODIGO_NIVEL}</td><td class="text-left">${r.UPLINE}</td>`;
+            const hasHistory = item.history.length > 0;
+            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
+                                <td class="text-left"><strong>${item.agente}</strong></td>
+                                <td class="text-left">${item.latest.ID_PRODUCER}</td>
+                                <td class="text-center">${item.latest.CODIGO_NIVEL}</td>
+                                <td class="text-left">${item.latest.UPLINE}</td>`;
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            detail.innerHTML = `<td colspan="5"><div class="expanded-detail-card"><div class="detail-grid">
-                <div class="detail-field"><span class="field-label">NPN Agente</span><span class="field-value">${r.NPN_AGENTE||"—"}</span></div>
-                <div class="detail-field"><span class="field-label">Fecha Ingreso</span><span class="field-value">${r.FECHA_INGRESO||"—"}</span></div>
-                <div class="detail-field"><span class="field-label">NPN Upline</span><span class="field-value">${r.NPN_UPLINE||"—"}</span></div>
-            </div></div></td>`;
+            if(hasHistory) {
+                let historyHtml = `<div class="expanded-detail-card"><div><strong>Historial de cambios</strong></div><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha Ingreso</th><th>Nivel</th><th>Upline</th><th>NPN Upline</th></tr></thead><tbody>`;
+                for(const h of item.history) {
+                    historyHtml += `<tr><td>${h.FECHA_INGRESO||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.NPN_UPLINE||"-"}</td><tr>`;
+                }
+                historyHtml += `</tbody></table></div></div>`;
+                detail.innerHTML = `<td colspan="5">${historyHtml}</td>`;
+            } else {
+                detail.innerHTML = `<td colspan="5"><div class="expanded-detail-card"><div class="detail-grid">
+                    <div class="detail-field"><span class="field-label">NPN Agente</span><span class="field-value">${item.latest.NPN_AGENTE||"—"}</span></div>
+                    <div class="detail-field"><span class="field-label">Fecha Ingreso</span><span class="field-value">${item.latest.FECHA_INGRESO||"—"}</span></div>
+                    <div class="detail-field"><span class="field-label">NPN Upline</span><span class="field-value">${item.latest.NPN_UPLINE||"—"}</span></div>
+                </div></div></td>`;
+            }
             master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
             tbody.appendChild(master); tbody.appendChild(detail);
-        });
+        }
+        
+        if(agentesData.length > 6) {
+            if(!jerarquiaExpandidas) {
+                const btnVerTodos = document.createElement("button");
+                btnVerTodos.textContent = "Ver todos los agentes";
+                btnVerTodos.className = "btn-expand";
+                btnVerTodos.onclick = () => {
+                    jerarquiaExpandidas = true;
+                    renderTablaJerarquia();
+                };
+                container.appendChild(btnVerTodos);
+            } else {
+                const btnVerMenos = document.createElement("button");
+                btnVerMenos.textContent = "Mostrar solo 6";
+                btnVerMenos.className = "btn-expand";
+                btnVerMenos.onclick = () => {
+                    jerarquiaExpandidas = false;
+                    renderTablaJerarquia();
+                };
+                container.appendChild(btnVerMenos);
+            }
+        }
     }
 
+    // --- PAGOS: con orden descendente por Pagado Hasta en el detalle ---
     function renderTablaPagosAgrupados() {
         const query = document.getElementById("search-pagos").value.toLowerCase();
         const trackingFilter = document.getElementById("payment-tracking-filter").value;
@@ -1152,23 +1306,60 @@
         }
         let filteredGroups = Array.from(groups.entries());
         if(trackingFilter !== "TODOS") filteredGroups = filteredGroups.filter(([_,g]) => g.trackingValues.has(trackingFilter));
+        
+        let rowsToShow = filteredGroups;
+        if(!pagosExpandidos && filteredGroups.length > 6) rowsToShow = filteredGroups.slice(0,6);
+        
         const tbody = document.getElementById("tbody-pagos-agrupados"); tbody.innerHTML = "";
-        if(!filteredGroups.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>Sin registros de pagos</td></tr>"; return; }
-        for(const [codigo, group] of filteredGroups){
+        const container = document.getElementById("pagos-btn-container");
+        container.innerHTML = "";
+        
+        if(!rowsToShow.length){ tbody.innerHTML="<tr><td colspan='6' class='text-center'>Sin registros de pagos</td></tr>"; return; }
+        
+        for(const [codigo, group] of rowsToShow){
             const paidStr = group.latestPaidUntil ? group.latestPaidUntil.toISOString().split('T')[0] : "—";
             const master = document.createElement("tr"); master.className="interactive-row";
             master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left">${group.cliente||"—"}</td><td class="text-left"><code>${codigo}</code></td><td class="text-left">${group.idProducto||"—"}</td><td class="text-left">${paidStr}</td><td class="text-center">${group.numTrans}</td>`;
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            let inner = `<div class="expanded-detail-card" style="flex-direction:column; gap:12px;"><div><strong>Detalle de transacciones para la póliza ${codigo}</strong></div><div class="overflow-wrapper" style="max-height:300px;"><table class="inner-payment-table"><thead><tr><th class="text-left">Pagado Hasta</th><th class="text-left">Estatus Pago</th><th class="text-left">Método Pago</th><th class="text-right">Prima</th><th class="text-right">% Comisión</th><th class="text-left">Seguimiento</th><th class="text-left">Fuente</th></tr></thead><tbody>`;
-            for(const t of group.rows){
+            
+            // ORDENAR LAS TRANSACCIONES POR PAGADO_HASTA DESCENDENTE (más reciente primero)
+            const sortedRows = [...group.rows].sort((a,b) => {
+                const dateA = a.PAGADO_HASTA ? new Date(a.PAGADO_HASTA) : new Date(0);
+                const dateB = b.PAGADO_HASTA ? new Date(b.PAGADO_HASTA) : new Date(0);
+                return dateB - dateA;
+            });
+            
+            let inner = `<div class="expanded-detail-card" style="flex-direction:column; gap:12px;"><div><strong>Detalle de transacciones para la póliza ${codigo}</strong></div><div class="overflow-wrapper" style="max-height:300px;"><table class="inner-payment-table"><thead><tr><th class="text-left">Pagado Hasta</th><th class="text-left">Estatus Pago</th><th class="text-left">Método Pago</th><th class="text-right">Prima</th><th class="text-left">Seguimiento</th></tr></thead><tbody>`;
+            for(const t of sortedRows){
                 const prima = parseFloat(t.PRIMA.replace(/[^0-9.-]/g,""));
-                const com = parseFloat(t.PORC_COMISION.replace(/[^0-9.-]/g,""));
-                inner += `<tr><td class="text-left">${t.PAGADO_HASTA||"—"}</td><td class="text-left"><span class="badge-pill-flat ${t.ESTATUS==='Pagado'?'pill-active':'pill-pending'}">${t.ESTATUS||"—"}</span></td><td class="text-left">${t.METODO_PAGO||"—"}</td><td class="text-right">${formatCurrencyNoSymbol(prima)}</td><td class="text-right">${formatCurrencyNoSymbol(com)}%</td><td class="text-left">${t.SEGUIMIENTO_PAGO||"—"}</td><td class="text-left">${t["SOURCE.NAME"]||"—"}</td></tr>`;
+                inner += `<tr><td class="text-left">${t.PAGADO_HASTA||"—"}</td><td class="text-left"><span class="badge-pill-flat ${t.ESTATUS==='Pagado'?'pill-active':'pill-pending'}">${t.ESTATUS||"—"}</span></td><td class="text-left">${t.METODO_PAGO||"—"}</td><td class="text-right">${formatCurrencyNoSymbol(prima)}</td><td class="text-left">${t.SEGUIMIENTO_PAGO||"—"}</td></tr>`;
             }
             inner += `</tbody></table></div></div>`;
             detail.innerHTML = `<td colspan="6">${inner}</td>`;
             master.addEventListener("click",(e)=>{ e.stopPropagation(); const open = detail.style.display==="table-row"; detail.style.display = open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open); });
             tbody.appendChild(master); tbody.appendChild(detail);
+        }
+        
+        if(filteredGroups.length > 6) {
+            if(!pagosExpandidos) {
+                const btnVerTodos = document.createElement("button");
+                btnVerTodos.textContent = "Ver todos los registros";
+                btnVerTodos.className = "btn-expand";
+                btnVerTodos.onclick = () => {
+                    pagosExpandidos = true;
+                    renderTablaPagosAgrupados();
+                };
+                container.appendChild(btnVerTodos);
+            } else {
+                const btnVerMenos = document.createElement("button");
+                btnVerMenos.textContent = "Mostrar solo 6";
+                btnVerMenos.className = "btn-expand";
+                btnVerMenos.onclick = () => {
+                    pagosExpandidos = false;
+                    renderTablaPagosAgrupados();
+                };
+                container.appendChild(btnVerMenos);
+            }
         }
     }
 
