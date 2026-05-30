@@ -720,11 +720,11 @@
 </div>
 
 <script>
-    // --- NUEVAS URLS ACTUALIZADAS ---
-    const URL_PRODUCCION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=285037414&single=true&output=csv";
-    const URL_CONTRATACION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1740923115&single=true&output=csv";
-    const URL_JERARQUIA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=678161413&single=true&output=csv";
-    const URL_PAGOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=1653343233&single=true&output=csv";
+    // --- NUEVOS LINKS ACTUALIZADOS ---
+    const URL_PRODUCCION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=614515536&single=true&output=csv";
+    const URL_CONTRATACION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=349271248&single=true&output=csv";
+    const URL_JERARQUIA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=45220917&single=true&output=csv";
+    const URL_PAGOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSBDvBwAbuq8s-7F10umUH4NS9MObGJYcW83Mdh0GgTXxoSNuhz9EFwbvJ1nnN-UQ/pub?gid=550259423&single=true&output=csv";
 
     let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [];
     let filteredProduccion = [];
@@ -848,7 +848,7 @@
         renderTablaPagosAgrupados();
     }
 
-    // Funciones de parseo
+    // Funciones de parseo (sin cambios)
     function parseCSVGeneral(csvText) {
         const rows = []; let inQuote = false; let row = []; let field = "";
         for (let i = 0; i < csvText.length; i++) {
@@ -1243,7 +1243,7 @@
             if(hasHistory) {
                 let historyHtml = `<div class="expanded-detail-card"><div><strong>Historial de cambios</strong></div><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha Ingreso</th><th>Nivel</th><th>Upline</th><th>NPN Upline</th></tr></thead><tbody>`;
                 for(const h of item.history) {
-                    historyHtml += `<tr><td>${h.FECHA_INGRESO||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.NPN_UPLINE||"-"}</td><tr>`;
+                    historyHtml += `<tr><td>${h.FECHA_INGRESO||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.NPN_UPLINE||"-"}</td></tr>`;
                 }
                 historyHtml += `</tbody></table></div></div>`;
                 detail.innerHTML = `<td colspan="5">${historyHtml}</td>`;
@@ -1281,7 +1281,6 @@
         }
     }
 
-    // --- PAGOS: con orden descendente por Pagado Hasta en el detalle ---
     function renderTablaPagosAgrupados() {
         const query = document.getElementById("search-pagos").value.toLowerCase();
         const trackingFilter = document.getElementById("payment-tracking-filter").value;
@@ -1322,7 +1321,6 @@
             master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left">${group.cliente||"—"}</td><td class="text-left"><code>${codigo}</code></td><td class="text-left">${group.idProducto||"—"}</td><td class="text-left">${paidStr}</td><td class="text-center">${group.numTrans}</td>`;
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
             
-            // ORDENAR LAS TRANSACCIONES POR PAGADO_HASTA DESCENDENTE (más reciente primero)
             const sortedRows = [...group.rows].sort((a,b) => {
                 const dateA = a.PAGADO_HASTA ? new Date(a.PAGADO_HASTA) : new Date(0);
                 const dateB = b.PAGADO_HASTA ? new Date(b.PAGADO_HASTA) : new Date(0);
