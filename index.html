@@ -231,6 +231,84 @@
             outline: none;
         }
 
+        /* Dropdown personalizado para productos */
+        .custom-dropdown {
+            position: relative;
+            width: 100%;
+        }
+        .dropdown-btn {
+            width: 100%;
+            background: #11273F;
+            border: 1px solid #254358;
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: #F1F5F9;
+            font-size: 0.85rem;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .dropdown-btn span:first-child {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .dropdown-btn i {
+            color: #89A3C0;
+            transition: transform 0.2s;
+        }
+        .dropdown-panel {
+            position: absolute;
+            top: calc(100% + 5px);
+            left: 0;
+            width: 100%;
+            background: #11273F;
+            border: 1px solid #254358;
+            border-radius: 10px;
+            z-index: 1000;
+            max-height: 250px;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            padding: 8px 0;
+        }
+        .dropdown-panel.show {
+            display: flex;
+        }
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            color: #F1F5F9;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+        .checkbox-option:hover {
+            background: #1E3A5F;
+        }
+        .checkbox-option input {
+            margin: 0;
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+            accent-color: var(--brand-primary);
+        }
+        .checkbox-option label {
+            flex: 1;
+            cursor: pointer;
+            font-weight: normal;
+            color: inherit;
+        }
+        .divider-dropdown {
+            height: 1px;
+            background: #254358;
+            margin: 6px 0;
+        }
+
         .btn-reset-modern, .btn-refresh-modern {
             margin-top: 4px;
             background: rgba(231, 111, 81, 0.12);
@@ -260,7 +338,6 @@
             color: var(--brand-secondary);
         }
 
-        /* KPI restaurados a tamaño original (compactos) */
         .kpi-row-clean {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -512,7 +589,6 @@
         .text-center { text-align: center !important; }
         .text-left { text-align: left !important; }
 
-        /* Tabla de productos con anchos fijos */
         .productos-table {
             table-layout: fixed;
         }
@@ -529,7 +605,6 @@
             text-align: right;
         }
 
-        /* Badges */
         .badge-pill-flat {
             display: inline-flex;
             padding: 4px 10px;
@@ -543,7 +618,6 @@
         .pill-info { background: #E3F2FD; color: #1976D2; }
         .pill-neutral { background: #F1F5F9; color: var(--neutral); }
 
-        /* Filas expandibles */
         .interactive-row {
             cursor: pointer;
         }
@@ -600,7 +674,6 @@
         }
         code { background: #F1F5F9; padding: 2px 6px; border-radius: 6px; font-size: 0.75rem; }
         
-        /* Tabla interna de pagos: todo centrado */
         .inner-payment-table {
             width: 100%;
             border-collapse: collapse;
@@ -703,9 +776,15 @@
             </div>
             <div class="filter-box">
                 <label>📦 Línea de Producto</label>
-                <select id="product-filter" class="filter-element">
-                    <option value="TODOS">Todos los Productos</option>
-                </select>
+                <div class="custom-dropdown" id="product-dropdown">
+                    <button class="dropdown-btn" id="product-dropdown-btn">
+                        <span id="product-selected-text">Todos los productos</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-panel" id="product-dropdown-panel">
+                        <!-- Los checkboxes se generarán dinámicamente -->
+                    </div>
+                </div>
             </div>
             <div class="filter-box">
                 <label>👤 Agente / Productor</label>
@@ -854,6 +933,10 @@
 
     let polizasExpandidas = false, contratacionesExpandidas = false, jerarquiaExpandidas = false, pagosExpandidos = false;
 
+    // Variables para el dropdown de productos
+    let selectedProducts = []; // Array con los nombres de productos seleccionados
+    let allProductsList = [];
+
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 1 }).format(val / 100);
 
@@ -874,12 +957,12 @@
         initControls();
         await cargarFuentesExternas();
         initClearButtons();
+        initProductDropdown();
     });
 
     function initControls() {
         datePicker = flatpickr("#date-range-picker", { mode: "range", dateFormat: "Y-m-d", locale: "es", onChange: () => { resetearExpansiones(); aplicarFiltros(); } });
         document.getElementById("status-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
-        document.getElementById("product-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
         document.getElementById("agent-filter").addEventListener("change", () => { aplicarFiltros(); renderTablaJerarquia(); renderTablaPagosAgrupados(); });
         document.getElementById("payment-tracking-filter").addEventListener("change", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
         document.getElementById("search-polizas").addEventListener("input", () => { polizasExpandidas = false; renderTablaPolizasDetalle(); });
@@ -888,7 +971,10 @@
         document.getElementById("search-pagos").addEventListener("input", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
             document.getElementById("status-filter").value = "TODAS";
-            document.getElementById("product-filter").value = "TODOS";
+            // Limpiar selección de productos (dropdown)
+            selectedProducts = [];
+            updateProductDropdownText();
+            renderProductCheckboxes(); // refrescar checkboxes
             document.getElementById("agent-filter").value = "TODOS";
             document.getElementById("payment-tracking-filter").value = "TODOS";
             datePicker.clear();
@@ -916,6 +1002,83 @@
                 toggle();
             }
         });
+    }
+
+    function initProductDropdown() {
+        const btn = document.getElementById('product-dropdown-btn');
+        const panel = document.getElementById('product-dropdown-panel');
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            panel.classList.toggle('show');
+        });
+        // Cerrar al hacer clic fuera
+        document.addEventListener('click', function(e) {
+            if (!btn.contains(e.target) && !panel.contains(e.target)) {
+                panel.classList.remove('show');
+            }
+        });
+    }
+
+    function renderProductCheckboxes() {
+        const panel = document.getElementById('product-dropdown-panel');
+        if (!panel) return;
+        if (allProductsList.length === 0) {
+            panel.innerHTML = '<div class="checkbox-option" style="justify-content:center;">Sin productos</div>';
+            return;
+        }
+        let html = `<div class="checkbox-option"><input type="checkbox" id="select-all-products" ${selectedProducts.length === allProductsList.length ? 'checked' : ''}> <label for="select-all-products">Seleccionar todos</label></div><div class="divider-dropdown"></div>`;
+        allProductsList.forEach(prod => {
+            const checked = selectedProducts.includes(prod) ? 'checked' : '';
+            html += `<div class="checkbox-option"><input type="checkbox" value="${prod.replace(/"/g, '&quot;')}" ${checked}> <label>${prod}</label></div>`;
+        });
+        panel.innerHTML = html;
+        // Eventos
+        const selectAllCheck = document.getElementById('select-all-products');
+        if (selectAllCheck) {
+            selectAllCheck.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    selectedProducts = [...allProductsList];
+                } else {
+                    selectedProducts = [];
+                }
+                updateProductDropdownText();
+                // Actualizar checkboxes individuales
+                document.querySelectorAll('#product-dropdown-panel .checkbox-option input[type="checkbox"]').forEach(ch => {
+                    if (ch.id !== 'select-all-products') {
+                        ch.checked = selectedProducts.includes(ch.value);
+                    }
+                });
+                aplicarFiltros();
+            });
+        }
+        document.querySelectorAll('#product-dropdown-panel .checkbox-option input[type="checkbox"]').forEach(ch => {
+            if (ch.id === 'select-all-products') return;
+            ch.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (e.target.checked) {
+                    if (!selectedProducts.includes(val)) selectedProducts.push(val);
+                } else {
+                    selectedProducts = selectedProducts.filter(p => p !== val);
+                }
+                updateProductDropdownText();
+                // Actualizar "Seleccionar todos"
+                const selectAll = document.getElementById('select-all-products');
+                if (selectAll) selectAll.checked = (selectedProducts.length === allProductsList.length);
+                aplicarFiltros();
+            });
+        });
+    }
+
+    function updateProductDropdownText() {
+        const span = document.getElementById('product-selected-text');
+        if (!span) return;
+        if (selectedProducts.length === 0) {
+            span.textContent = 'Todos los productos';
+        } else if (selectedProducts.length === 1) {
+            span.textContent = selectedProducts[0];
+        } else {
+            span.textContent = `${selectedProducts.length} seleccionados`;
+        }
     }
 
     function resetearExpansiones() { polizasExpandidas = contratacionesExpandidas = jerarquiaExpandidas = pagosExpandidos = false; }
@@ -947,19 +1110,21 @@
         rawProduccion = [
             { AGENTE: "Carlos López", PRODUCTO: "Vida", PRIMA_NAP: "1500", CODIGO_POLIZA: "POL001", EMISION: "2025-01-15", ACTIVACION: "2025-01-20", ESTATUS: "Activa", ESTADO: "Florida", CLIENTE: "Juan Pérez", DIRECCION: "Calle 123", CIUDAD: "Miami", ZIP_CODE: "33101", TELEFONO: "305-555-1234", ID_PRODUCER: "ID001" },
             { AGENTE: "María Gómez", PRODUCTO: "Salud", PRIMA_NAP: "2500", CODIGO_POLIZA: "POL002", EMISION: "2025-02-10", ACTIVACION: "2025-02-15", ESTATUS: "Activa", ESTADO: "Texas", CLIENTE: "Ana Rodríguez", DIRECCION: "Avenida 456", CIUDAD: "Houston", ZIP_CODE: "77001", TELEFONO: "713-555-5678", ID_PRODUCER: "ID002" },
-            { AGENTE: "Carlos López", PRODUCTO: "Auto", PRIMA_NAP: "800", CODIGO_POLIZA: "POL003", EMISION: "2025-01-20", ACTIVACION: "2025-01-25", ESTATUS: "Pendiente", ESTADO: "California", CLIENTE: "Roberto Sánchez", DIRECCION: "Boulevard 789", CIUDAD: "Los Ángeles", ZIP_CODE: "90001", TELEFONO: "213-555-9012", ID_PRODUCER: "ID001" }
+            { AGENTE: "Carlos López", PRODUCTO: "Auto", PRIMA_NAP: "800", CODIGO_POLIZA: "POL003", EMISION: "2025-01-20", ACTIVACION: "2025-01-25", ESTATUS: "Pendiente", ESTADO: "California", CLIENTE: "Roberto Sánchez", DIRECCION: "Boulevard 789", CIUDAD: "Los Ángeles", ZIP_CODE: "90001", TELEFONO: "213-555-9012", ID_PRODUCER: "ID001" },
+            { AGENTE: "Ana Rodríguez", PRODUCTO: "Accident", PRIMA_NAP: "1200", CODIGO_POLIZA: "POL004", EMISION: "2025-03-01", ACTIVACION: "2025-03-05", ESTATUS: "Activa", ESTADO: "Nevada", CLIENTE: "Luis Pérez", DIRECCION: "Calle Sol", CIUDAD: "Las Vegas", ZIP_CODE: "89101", TELEFONO: "702-555-1111", ID_PRODUCER: "ID003" },
+            { AGENTE: "María Gómez", PRODUCTO: "Cancer", PRIMA_NAP: "1800", CODIGO_POLIZA: "POL005", EMISION: "2025-03-10", ACTIVACION: "2025-03-15", ESTATUS: "Activa", ESTADO: "Texas", CLIENTE: "Laura Fernández", DIRECCION: "Av. Principal", CIUDAD: "Dallas", ZIP_CODE: "75201", TELEFONO: "214-555-2222", ID_PRODUCER: "ID002" }
         ];
         rawContratacion = [
             { AGENTE: "Carlos López", FECHA_CREACION: "2025-01-01", TIPO_PROCESO: "Onboarding", ESTATUS: "APROBADO", UPLINE: "Directo", CODIGO_NIVEL: "N1" },
-            { AGENTE: "Carlos López", FECHA_CREACION: "2025-02-15", TIPO_PROCESO: "Renovación", ESTATUS: "CREATED - NEW", UPLINE: "Regional", CODIGO_NIVEL: "N2" }
+            { AGENTE: "María Gómez", FECHA_CREACION: "2025-02-15", TIPO_PROCESO: "Renovación", ESTATUS: "CREATED - NEW", UPLINE: "Regional", CODIGO_NIVEL: "N2" }
         ];
         rawJerarquia = [
             { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-01-01", CODIGO_NIVEL: "1", NPN_UPLINE: "NPN000", UPLINE: "Admin" },
-            { AGENTE: "Carlos López", NPN_AGENTE: "NPN123", ID_PRODUCER: "ID001", FECHA_INGRESO: "2025-03-01", CODIGO_NIVEL: "2", NPN_UPLINE: "NPN001", UPLINE: "Supervisor" }
+            { AGENTE: "María Gómez", NPN_AGENTE: "NPN456", ID_PRODUCER: "ID002", FECHA_INGRESO: "2025-02-10", CODIGO_NIVEL: "2", NPN_UPLINE: "NPN123", UPLINE: "Carlos López" }
         ];
         rawPagos = [
-            { CLIENTE: "Juan Pérez", CODIGO_POLIZA: "POL001", ID_PRODUCTO: "VIDA01", A_COBRAR: "1500", PAGADO_HASTA: "2025-02-28", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Transferencia", PRIMA: "1500" },
-            { CLIENTE: "Juan Pérez", CODIGO_POLIZA: "POL001", ID_PRODUCTO: "VIDA01", PAGADO_HASTA: "2025-01-15", SEGUIMIENTO_PAGO: "Pendiente", ESTATUS: "Pendiente", METODO_PAGO: "Efectivo", PRIMA: "1500" }
+            { CLIENTE: "Juan Pérez", CODIGO_POLIZA: "POL001", ID_PRODUCTO: "VIDA01", PAGADO_HASTA: "2025-02-28", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Transferencia", PRIMA: "1500" },
+            { CLIENTE: "Ana Rodríguez", CODIGO_POLIZA: "POL002", ID_PRODUCTO: "SALUD02", PAGADO_HASTA: "2025-03-15", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Tarjeta", PRIMA: "2500" }
         ];
         poblarFiltrosDinamicos();
         poblarFiltrosPagos();
@@ -970,7 +1135,7 @@
         renderTablaPagosAgrupados();
     }
 
-    // Funciones de parseo (simplificadas pero completas)
+    // Funciones de parseo
     function parseCSVGeneral(csvText) {
         const rows = []; let inQuote = false, row = [], field = "";
         for (let i = 0; i < csvText.length; i++) {
@@ -1027,9 +1192,10 @@
     function poblarFiltrosDinamicos() {
         const prodSet = new Set(), agentSet = new Set();
         rawProduccion.forEach(p => { if(p.PRODUCTO) prodSet.add(p.PRODUCTO.trim()); if(p.AGENTE) agentSet.add(p.AGENTE.trim()); });
-        const prodSel = document.getElementById("product-filter");
-        prodSel.innerHTML = '<option value="TODOS">Todos los Productos</option>';
-        [...prodSet].sort().forEach(p => { let opt = document.createElement("option"); opt.value = p; opt.textContent = p; prodSel.appendChild(opt); });
+        allProductsList = [...prodSet].sort();
+        // Actualizar dropdown de productos
+        renderProductCheckboxes();
+        // Agentes
         const agentSel = document.getElementById("agent-filter");
         agentSel.innerHTML = '<option value="TODOS">Todos los Agentes</option>';
         [...agentSet].sort().forEach(a => { let opt = document.createElement("option"); opt.value = a; opt.textContent = a; agentSel.appendChild(opt); });
@@ -1051,9 +1217,9 @@
 
     function aplicarFiltros() {
         const status = document.getElementById("status-filter").value;
-        const product = document.getElementById("product-filter").value;
         const agent = document.getElementById("agent-filter").value;
         const [start, end] = datePicker.selectedDates;
+        
         filteredProduccion = rawProduccion.filter(row => {
             if (status !== "TODAS") {
                 const est = (row.ESTATUS || "").toUpperCase();
@@ -1064,7 +1230,8 @@
                 else if (status === "TERMINADAS" && est === "TERMINADA") ok = true;
                 if (!ok) return false;
             }
-            if (product !== "TODOS" && row.PRODUCTO !== product) return false;
+            // Filtro múltiple de productos (desde dropdown)
+            if (selectedProducts.length > 0 && !selectedProducts.includes(row.PRODUCTO)) return false;
             if (agent !== "TODOS" && row.AGENTE !== agent) return false;
             if (start && end) {
                 const fecha = new Date(row.EMISION);
@@ -1275,7 +1442,7 @@
             if(item.history.length) {
                 let html = `<div class="expanded-detail-card"><strong>Historial de cambios</strong><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha Ingreso</th><th>Nivel</th><th>Upline</th><th>NPN Upline</th></tr></thead><tbody>`;
                 for(const h of item.history) html += `<tr><td>${h.FECHA_INGRESO||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.NPN_UPLINE||"-"}</td></tr>`;
-                html += `</tbody></table></div></div>`;
+                html += `</tbody>}</div></div>`;
                 detail.innerHTML = `<td colspan="5">${html}</td>`;
             } else {
                 detail.innerHTML = `<td colspan="5"><div class="expanded-detail-card"><div class="detail-grid"><div class="detail-field"><span class="field-label">NPN Agente</span><span class="field-value">${item.latest.NPN_AGENTE||"—"}</span></div><div class="detail-field"><span class="field-label">Fecha Ingreso</span><span class="field-value">${item.latest.FECHA_INGRESO||"—"}</span></div><div class="detail-field"><span class="field-label">NPN Upline</span><span class="field-value">${item.latest.NPN_UPLINE||"—"}</span></div></div></div></td>`;
@@ -1329,7 +1496,7 @@
                 const estClass = (t.ESTATUS||"").toUpperCase() === 'PAGADO' ? 'pill-active' : 'pill-pending';
                 inner += `<tr><td>${t.PAGADO_HASTA||"—"}</td><td><span class="badge-pill-flat ${estClass}">${t.ESTATUS||"—"}</span></td><td>${t.METODO_PAGO||"—"}</td><td class="text-right">${formatCurrencyNoSymbol(prima)}</td><td>${t.SEGUIMIENTO_PAGO||"—"}</td></tr>`;
             }
-            inner += `</tbody></table></div></div>`;
+            inner += `</tbody>}</div></div>`;
             detail.innerHTML = `<td colspan="6">${inner}</td>`;
             master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
             tbody.appendChild(master); tbody.appendChild(detail);
