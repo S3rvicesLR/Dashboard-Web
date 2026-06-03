@@ -436,7 +436,6 @@
             align-items: center;
             gap: 12px;
         }
-        /* Clase para alinear la persistencia global a la derecha */
         .flex-between {
             display: flex;
             justify-content: space-between;
@@ -800,7 +799,6 @@
             </div>
             <div class="block-table-card">
                 <div class="table-toolbar-top">
-                    <!-- Se aplica clase flex-between para alinear la persistencia a la derecha -->
                     <h3 class="flex-between">
                         <span>Distribución por Línea</span>
                         <span id="persistencia-global-label" class="persistencia-global">Persistencia Global: --%</span>
@@ -819,10 +817,18 @@
         <div class="block-table-card">
             <div class="table-toolbar-top">
                 <h3><i class="fa-regular fa-file-lines"></i> Historial de Pólizas</h3>
-                <div class="search-wrapper">
-                    <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="search-polizas" placeholder="Cliente, agente, código...">
-                    <button class="clear-search" data-search="polizas"><i class="fas fa-times-circle"></i></button>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                    <div class="search-wrapper" style="width: auto; min-width: 180px;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-polizas" placeholder="Cliente, agente, código...">
+                        <button class="clear-search" data-search="polizas"><i class="fas fa-times-circle"></i></button>
+                    </div>
+                    <!-- NUEVO FILTRO DE COMISIÓN EN HISTORIAL DE PÓLIZAS -->
+                    <select id="polizas-comision-filter" class="filter-element filter-inline">
+                        <option value="TODOS">Comisión: Todos</option>
+                        <option value="CON">Con comisión</option>
+                        <option value="SIN">Sin comisión</option>
+                    </select>
                 </div>
             </div>
             <div class="overflow-wrapper">
@@ -986,6 +992,9 @@
     let comisionStatusFilter = "TODOS";
     let comisionMonthFilter = "TODOS";
     
+    // Nuevo filtro para historial de pólizas: "TODOS", "CON", "SIN"
+    let polizasComisionFilter = "TODOS";
+    
     let comisionCodesSet = new Set();
 
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
@@ -1026,6 +1035,16 @@
         
         document.getElementById("comision-status-filter").addEventListener("change", (e) => { comisionStatusFilter = e.target.value; comisionesExpandidas = false; renderTablaComisiones(); });
         document.getElementById("comision-month-filter").addEventListener("change", (e) => { comisionMonthFilter = e.target.value; comisionesExpandidas = false; renderTablaComisiones(); });
+        
+        // Nuevo filtro de comisión para historial de pólizas
+        const polizasComisionSelect = document.getElementById("polizas-comision-filter");
+        if (polizasComisionSelect) {
+            polizasComisionSelect.addEventListener("change", (e) => {
+                polizasComisionFilter = e.target.value;
+                polizasExpandidas = false;
+                renderTablaPolizasDetalle();
+            });
+        }
 
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
             selectedStatuses = ['ACTIVAS', 'PENDIENTES', 'SUSPENDIDAS', 'TERMINADAS'];
@@ -1040,6 +1059,11 @@
             document.getElementById("payment-status-filter").value = "TODOS";
             document.getElementById("comision-status-filter").value = "TODOS";
             document.getElementById("comision-month-filter").value = "TODOS";
+            // Resetear filtro de comisión en historial
+            if (document.getElementById("polizas-comision-filter")) {
+                document.getElementById("polizas-comision-filter").value = "TODOS";
+                polizasComisionFilter = "TODOS";
+            }
             comisionStatusFilter = "TODOS";
             comisionMonthFilter = "TODOS";
             datePicker.clear();
@@ -1366,7 +1390,6 @@
         updateProductDropdownText();
     }
 
-    // MODIFICACIÓN: meses en MAYÚSCULA para el filtro de pagos
     function poblarFiltrosPagos() {
         const trackingSet = new Set();
         rawPagos.forEach(p => { if(p.SEGUIMIENTO_PAGO && p.SEGUIMIENTO_PAGO.trim()) trackingSet.add(p.SEGUIMIENTO_PAGO.trim()); });
@@ -1387,7 +1410,7 @@
         [...monthsSet].sort().reverse().forEach(key => {
             const [year, month] = key.split('-');
             let monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
-            monthName = monthName.toUpperCase(); // Convertir a MAYÚSCULAS
+            monthName = monthName.toUpperCase();
             const opt = document.createElement("option"); opt.value = key; opt.textContent = `${monthName} ${year}`;
             monthSelect.appendChild(opt);
         });
@@ -1399,7 +1422,6 @@
         [...statusSet].sort().forEach(s => { let opt = document.createElement("option"); opt.value = s; opt.textContent = s; statusSelect.appendChild(opt); });
     }
 
-    // MODIFICACIÓN: meses en MAYÚSCULA para el filtro de comisiones
     function poblarFiltrosComisiones() {
         const statusSet = new Set();
         const monthSet = new Set();
@@ -1420,7 +1442,7 @@
         [...monthSet].sort().reverse().forEach(key => {
             const [year, month] = key.split('-');
             let monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
-            monthName = monthName.toUpperCase(); // Convertir a MAYÚSCULAS
+            monthName = monthName.toUpperCase();
             const opt = document.createElement("option"); opt.value = key; opt.textContent = `${monthName} ${year}`;
             monthSelect.appendChild(opt);
         });
@@ -1549,9 +1571,18 @@
         });
     }
 
+    // RENDER TABLA PÓLIZAS DETALLE CON NUEVO FILTRO DE COMISIÓN
     function renderTablaPolizasDetalle() {
         const query = document.getElementById("search-polizas").value.toLowerCase();
         let source = filteredProduccion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.CLIENTE||"").toLowerCase().includes(query) || (r.CODIGO_POLIZA||"").toLowerCase().includes(query));
+        
+        // Aplicar filtro de comisión
+        if (polizasComisionFilter === "CON") {
+            source = source.filter(r => comisionCodesSet.has(r.CODIGO_POLIZA));
+        } else if (polizasComisionFilter === "SIN") {
+            source = source.filter(r => !comisionCodesSet.has(r.CODIGO_POLIZA));
+        }
+        
         const tbody = document.getElementById("tbody-detallado-polizas"); tbody.innerHTML = "";
         const container = document.getElementById("polizas-btn-container"); container.innerHTML = "";
         if(!source.length) { tbody.innerHTML="<tr><td colspan='7' class='text-center'>No hay coincidencias</td></tr>"; return; }
