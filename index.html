@@ -192,7 +192,6 @@
             font-size: 0.85rem;
             outline: none;
         }
-        /* Ajuste para selects con texto largo */
         select.filter-element option {
             word-break: break-word;
             white-space: normal;
@@ -437,6 +436,13 @@
             align-items: center;
             gap: 12px;
         }
+        /* Clase para alinear la persistencia global a la derecha */
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
         .persistencia-global {
             background: #E8F0FE;
             color: #003399;
@@ -444,6 +450,7 @@
             border-radius: 30px;
             font-size: 0.7rem;
             font-weight: 600;
+            white-space: nowrap;
         }
         .search-wrapper {
             position: relative;
@@ -520,7 +527,6 @@
             font-weight: 400;
             white-space: nowrap;
         }
-        /* Permitir wrap en celdas de detalle expandido */
         .expanded-detail-card td {
             white-space: normal;
         }
@@ -693,7 +699,6 @@
         .top-agentes-table td:first-child, .top-agentes-table th:first-child {
             text-align: left;
         }
-        /* Mejoras para textos largos en dropdowns y detalles */
         @media (max-width: 640px) {
             .detail-grid {
                 grid-template-columns: 1fr;
@@ -795,7 +800,11 @@
             </div>
             <div class="block-table-card">
                 <div class="table-toolbar-top">
-                    <h3>Distribución por Línea <span id="persistencia-global-label" class="persistencia-global">Persistencia Global: --%</span></h3>
+                    <!-- Se aplica clase flex-between para alinear la persistencia a la derecha -->
+                    <h3 class="flex-between">
+                        <span>Distribución por Línea</span>
+                        <span id="persistencia-global-label" class="persistencia-global">Persistencia Global: --%</span>
+                    </h3>
                 </div>
                 <div class="overflow-wrapper">
                     <table class="productos-table">
@@ -972,13 +981,11 @@
     let polizasExpandidas = false, contratacionesExpandidas = false, jerarquiaExpandidas = false, pagosExpandidos = false, comisionesExpandidas = false;
     let selectedProducts = [];
     let allProductsList = [];
-    let selectedStatuses = ['ACTIVAS', 'PENDIENTES', 'SUSPENDIDAS', 'TERMINADAS']; // todos seleccionados por defecto
+    let selectedStatuses = ['ACTIVAS', 'PENDIENTES', 'SUSPENDIDAS', 'TERMINADAS'];
 
-    // Filtros de comisiones
     let comisionStatusFilter = "TODOS";
     let comisionMonthFilter = "TODOS";
     
-    // Set para saber qué códigos de póliza tienen comisión
     let comisionCodesSet = new Set();
 
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
@@ -1017,7 +1024,6 @@
         document.getElementById("search-pagos").addEventListener("input", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
         document.getElementById("search-comisiones").addEventListener("input", () => { comisionesExpandidas = false; renderTablaComisiones(); });
         
-        // Filtros de comisiones
         document.getElementById("comision-status-filter").addEventListener("change", (e) => { comisionStatusFilter = e.target.value; comisionesExpandidas = false; renderTablaComisiones(); });
         document.getElementById("comision-month-filter").addEventListener("change", (e) => { comisionMonthFilter = e.target.value; comisionesExpandidas = false; renderTablaComisiones(); });
 
@@ -1360,6 +1366,7 @@
         updateProductDropdownText();
     }
 
+    // MODIFICACIÓN: meses en MAYÚSCULA para el filtro de pagos
     function poblarFiltrosPagos() {
         const trackingSet = new Set();
         rawPagos.forEach(p => { if(p.SEGUIMIENTO_PAGO && p.SEGUIMIENTO_PAGO.trim()) trackingSet.add(p.SEGUIMIENTO_PAGO.trim()); });
@@ -1379,7 +1386,8 @@
         monthSelect.innerHTML = '<option value="TODOS">Todos los meses</option>';
         [...monthsSet].sort().reverse().forEach(key => {
             const [year, month] = key.split('-');
-            const monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
+            let monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
+            monthName = monthName.toUpperCase(); // Convertir a MAYÚSCULAS
             const opt = document.createElement("option"); opt.value = key; opt.textContent = `${monthName} ${year}`;
             monthSelect.appendChild(opt);
         });
@@ -1391,6 +1399,7 @@
         [...statusSet].sort().forEach(s => { let opt = document.createElement("option"); opt.value = s; opt.textContent = s; statusSelect.appendChild(opt); });
     }
 
+    // MODIFICACIÓN: meses en MAYÚSCULA para el filtro de comisiones
     function poblarFiltrosComisiones() {
         const statusSet = new Set();
         const monthSet = new Set();
@@ -1410,7 +1419,8 @@
         monthSelect.innerHTML = '<option value="TODOS">Mes Activación: Todos</option>';
         [...monthSet].sort().reverse().forEach(key => {
             const [year, month] = key.split('-');
-            const monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
+            let monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
+            monthName = monthName.toUpperCase(); // Convertir a MAYÚSCULAS
             const opt = document.createElement("option"); opt.value = key; opt.textContent = `${monthName} ${year}`;
             monthSelect.appendChild(opt);
         });
