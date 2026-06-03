@@ -12,6 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* ========== ESTILOS UNIFICADOS ========== */
         :root {
             --bg-app: #F4F7FC;
             --bg-sidebar: #0A1C2F;
@@ -27,14 +28,12 @@
             --neutral: #8D99AE;
             --info: #3498db;
         }
-
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-
         body {
             background: var(--bg-app);
             color: var(--text-main);
@@ -42,7 +41,6 @@
             display: flex;
             overflow-x: hidden;
         }
-
         #loader-overlay {
             position: fixed;
             inset: 0;
@@ -54,7 +52,6 @@
             align-items: center;
             transition: opacity 0.25s ease;
         }
-
         .spinner-modern {
             width: 52px;
             height: 52px;
@@ -65,18 +62,15 @@
             animation: spin 0.7s cubic-bezier(0.6, 0.2, 0.1, 0.9) infinite;
             margin-bottom: 20px;
         }
-
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-
         #loader-overlay p {
             color: #A0B4D7;
             font-weight: 500;
             letter-spacing: 1.5px;
             font-size: 0.85rem;
         }
-
         #error-banner {
             display: none;
             background: var(--danger);
@@ -92,12 +86,10 @@
             font-size: 0.85rem;
             box-shadow: 0 6px 14px rgba(0,0,0,0.08);
         }
-
         .app-container {
             display: flex;
             width: 100%;
         }
-
         .sidebar {
             width: 280px;
             background: var(--bg-sidebar);
@@ -113,7 +105,6 @@
             border-right: 1px solid rgba(255,255,255,0.08);
             overflow-y: auto;
         }
-
         .main-content {
             flex: 1;
             margin-left: 280px;
@@ -122,37 +113,16 @@
             width: calc(100% - 280px);
             overflow-x: auto;
         }
-
         @media (max-width: 1024px) {
-            .app-container {
-                flex-direction: column;
-            }
-            .sidebar {
-                width: 100%;
-                height: auto;
-                position: relative;
-                padding: 20px;
-            }
-            .main-content {
-                margin-left: 0;
-                width: 100%;
-                padding: 20px 16px;
-                overflow-x: visible;
-            }
+            .app-container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; position: relative; padding: 20px; }
+            .main-content { margin-left: 0; width: 100%; padding: 20px 16px; overflow-x: visible; }
         }
-
         @media (max-width: 640px) {
-            .main-content {
-                padding: 16px 12px;
-            }
-            .kpi-card-flat {
-                padding: 12px;
-            }
-            .kpi-flat-value {
-                font-size: 1.2rem;
-            }
+            .main-content { padding: 16px 12px; }
+            .kpi-card-flat { padding: 12px; }
+            .kpi-flat-value { font-size: 1.2rem; }
         }
-
         .sidebar-brand {
             display: flex;
             align-items: center;
@@ -161,7 +131,6 @@
             padding-bottom: 20px;
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
         .sidebar-logo {
             width: 54px;
             height: 54px;
@@ -176,7 +145,6 @@
             font-size: 1.5rem;
             color: var(--brand-primary);
         }
-
         .sidebar-brand-text h1 {
             font-size: 1rem;
             font-weight: 700;
@@ -184,7 +152,6 @@
             color: white;
             margin-bottom: 6px;
         }
-
         .sidebar-brand-text .healthspring-badge {
             font-size: 0.65rem;
             color: var(--brand-secondary);
@@ -192,7 +159,6 @@
             text-transform: uppercase;
             letter-spacing: 1px;
         }
-
         .filter-section-title {
             font-size: 0.7rem;
             font-weight: 700;
@@ -201,25 +167,21 @@
             letter-spacing: 1.5px;
             margin-bottom: 20px;
         }
-
         .filter-wrapper {
             display: flex;
             flex-direction: column;
             gap: 20px;
         }
-
         .filter-box {
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
-
         .filter-box label {
             font-size: 0.75rem;
             font-weight: 600;
             color: #A0B5D0;
         }
-
         .filter-element {
             width: 100%;
             background: #11273F;
@@ -230,8 +192,6 @@
             font-size: 0.85rem;
             outline: none;
         }
-
-        /* Dropdown personalizado para productos */
         .custom-dropdown {
             position: relative;
             width: 100%;
@@ -308,7 +268,6 @@
             background: #254358;
             margin: 6px 0;
         }
-
         .btn-reset-modern, .btn-refresh-modern {
             margin-top: 4px;
             background: rgba(231, 111, 81, 0.12);
@@ -325,37 +284,28 @@
             gap: 8px;
             transition: 0.2s;
         }
-
         .btn-reset-modern:hover, .btn-refresh-modern:hover {
             background: var(--danger);
             color: white;
             border-style: solid;
         }
-
         .btn-refresh-modern {
             background: rgba(0, 51, 153, 0.15);
             border-color: var(--brand-primary);
             color: var(--brand-secondary);
         }
-
         .kpi-row-clean {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 20px;
             margin-bottom: 30px;
         }
-
         @media (max-width: 900px) {
-            .kpi-row-clean {
-                grid-template-columns: repeat(2, 1fr);
-            }
+            .kpi-row-clean { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 480px) {
-            .kpi-row-clean {
-                grid-template-columns: 1fr;
-            }
+            .kpi-row-clean { grid-template-columns: 1fr; }
         }
-
         .kpi-card-flat {
             background: var(--bg-card);
             border: 1px solid var(--border-flat);
@@ -374,13 +324,14 @@
         }
         .kpi-flat-value {
             font-size: 1.5rem;
-            font-weight: 800;
+            font-weight: 500;
             line-height: 1.2;
             color: var(--text-main);
             word-break: break-word;
         }
         .kpi-flat-desc {
             font-size: 0.65rem;
+            font-weight: 400;
             color: var(--text-muted);
             margin-top: 8px;
             display: flex;
@@ -389,20 +340,15 @@
             gap: 5px;
             flex-wrap: wrap;
         }
-
         .visual-matrix {
             display: grid;
             grid-template-columns: 1.4fr 1fr;
             gap: 24px;
             margin-bottom: 30px;
         }
-
         @media (max-width: 900px) {
-            .visual-matrix {
-                grid-template-columns: 1fr;
-            }
+            .visual-matrix { grid-template-columns: 1fr; }
         }
-
         .chart-wrapper-card {
             background: var(--bg-card);
             border: 1px solid var(--border-flat);
@@ -411,7 +357,6 @@
             display: flex;
             flex-direction: column;
         }
-
         .chart-wrapper-card h3 {
             font-size: 0.9rem;
             font-weight: 700;
@@ -420,7 +365,6 @@
             align-items: center;
             gap: 8px;
         }
-
         .canvas-holder {
             position: relative;
             width: 100%;
@@ -430,13 +374,9 @@
             width: 100% !important;
             height: 100% !important;
         }
-
         @media (max-width: 640px) {
-            .canvas-holder {
-                height: 260px;
-            }
+            .canvas-holder { height: 260px; }
         }
-
         .section-separator {
             font-size: 0.75rem;
             font-weight: 700;
@@ -448,27 +388,21 @@
             align-items: center;
             gap: 12px;
         }
-
         .section-separator::after {
             content: '';
             flex: 1;
             height: 1px;
             background: var(--border-flat);
         }
-
         .grid-split-tables {
             display: grid;
             grid-template-columns: 1.1fr 1fr;
             gap: 24px;
             margin-bottom: 30px;
         }
-
         @media (max-width: 900px) {
-            .grid-split-tables {
-                grid-template-columns: 1fr;
-            }
+            .grid-split-tables { grid-template-columns: 1fr; }
         }
-
         .block-table-card {
             background: var(--bg-card);
             border: 1px solid var(--border-flat);
@@ -476,7 +410,6 @@
             overflow: hidden;
             width: 100%;
         }
-
         .table-toolbar-top {
             padding: 16px 20px;
             border-bottom: 1px solid var(--border-flat);
@@ -486,7 +419,6 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-
         .table-toolbar-top h3 {
             font-size: 0.9rem;
             font-weight: 700;
@@ -502,7 +434,6 @@
             font-size: 0.7rem;
             font-weight: 600;
         }
-
         .search-wrapper {
             position: relative;
             width: 250px;
@@ -515,6 +446,7 @@
             font-size: 0.8rem;
             background: #F8FAFC;
             transition: 0.2s;
+            font-weight: 400;
         }
         .search-wrapper input:focus {
             border-color: var(--brand-primary);
@@ -545,26 +477,20 @@
         .search-wrapper .clear-search:hover {
             color: var(--danger);
         }
-
         @media (max-width: 768px) {
-            .search-wrapper {
-                width: 100%;
-            }
+            .search-wrapper { width: 100%; }
         }
-
         .overflow-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
             width: 100%;
         }
-
         table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.85rem;
-            min-width: 400px;
+            min-width: 500px;
         }
-
         th, td {
             padding: 12px 16px;
             border-bottom: 1px solid var(--border-flat);
@@ -576,48 +502,46 @@
             font-size: 0.7rem;
             text-transform: uppercase;
             letter-spacing: 0.4px;
+            text-align: center;
         }
         td {
             color: var(--text-main);
+            font-weight: 400;
             white-space: nowrap;
         }
         tbody tr:hover {
             background: #F8FAFE;
         }
-
         .text-right { text-align: right !important; }
         .text-center { text-align: center !important; }
         .text-left { text-align: left !important; }
-
         .productos-table {
             table-layout: fixed;
         }
         .productos-table th:first-child, .productos-table td:first-child {
-            width: 45%;
+            width: 40%;
             text-align: left;
         }
         .productos-table th:nth-child(2), .productos-table td:nth-child(2) {
-            width: 25%;
+            width: 20%;
             text-align: center;
         }
         .productos-table th:nth-child(3), .productos-table td:nth-child(3) {
-            width: 30%;
+            width: 40%;
             text-align: right;
         }
-
         .badge-pill-flat {
             display: inline-flex;
             padding: 4px 10px;
             border-radius: 40px;
             font-size: 0.7rem;
-            font-weight: 700;
+            font-weight: 600;
         }
         .pill-active { background: #E0F2F0; color: #1E6F5C; }
         .pill-pending { background: #FFF2E0; color: #E9C46A; }
         .pill-failed { background: #FDE8E4; color: #E76F51; }
         .pill-info { background: #E3F2FD; color: #1976D2; }
         .pill-neutral { background: #F1F5F9; color: var(--neutral); }
-
         .interactive-row {
             cursor: pointer;
         }
@@ -625,7 +549,6 @@
             display: none;
             background: #FCFDFE;
         }
-        
         .expanded-detail-card {
             padding: 16px;
             background: #F8FAFE;
@@ -645,13 +568,13 @@
         }
         .detail-field .field-label {
             font-size: 0.65rem;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
             color: var(--text-muted);
         }
         .detail-field .field-value {
             font-size: 0.85rem;
-            font-weight: 500;
+            font-weight: 400;
             color: var(--text-main);
             background: white;
             padding: 6px 12px;
@@ -672,8 +595,7 @@
             transform: rotate(90deg);
             color: var(--brand-primary);
         }
-        code { background: #F1F5F9; padding: 2px 6px; border-radius: 6px; font-size: 0.75rem; }
-        
+        code { background: #F1F5F9; padding: 2px 6px; border-radius: 6px; font-size: 0.75rem; font-weight: 400; }
         .inner-payment-table {
             width: 100%;
             border-collapse: collapse;
@@ -690,7 +612,6 @@
             color: #2c3e50;
             text-align: center !important;
         }
-
         .btn-expand {
             background: none;
             border: 1px solid var(--border-flat);
@@ -720,18 +641,40 @@
             flex: 1;
         }
         @media (max-width: 640px) {
-            .btn-group-expand {
-                flex-direction: column;
-            }
-            .btn-group-expand .btn-expand {
-                width: 100%;
-            }
+            .btn-group-expand { flex-direction: column; }
+            .btn-group-expand .btn-expand { width: 100%; }
         }
         .no-data-message {
             padding: 40px;
             text-align: center;
             color: var(--text-muted);
             font-style: italic;
+        }
+        .filter-inline {
+            background: #F8FAFC;
+            color: #1A2C3E;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid var(--border-flat);
+            font-size: 0.8rem;
+            width: auto;
+            cursor: pointer;
+        }
+        .comision-check {
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+        .comision-check .fa-check-circle {
+            color: #2A9D8F;
+        }
+        .comision-check .fa-circle-xmark {
+            color: #8D99AE;
+        }
+        .top-agentes-table th, .top-agentes-table td {
+            text-align: center;
+        }
+        .top-agentes-table td:first-child, .top-agentes-table th:first-child {
+            text-align: left;
         }
     </style>
 </head>
@@ -766,13 +709,13 @@
             </div>
             <div class="filter-box">
                 <label>🔖 Estado de Póliza</label>
-                <select id="status-filter" class="filter-element">
-                    <option value="TODAS">Todas las Pólizas</option>
-                    <option value="ACTIVAS">Activas</option>
-                    <option value="PENDIENTES">Pendientes</option>
-                    <option value="SUSPENDIDAS">Suspendidas</option>
-                    <option value="TERMINADAS">Terminadas</option>
-                </select>
+                <div class="custom-dropdown" id="status-dropdown">
+                    <button class="dropdown-btn" id="status-dropdown-btn">
+                        <span id="status-selected-text">Todos los estados</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-panel" id="status-dropdown-panel"></div>
+                </div>
             </div>
             <div class="filter-box">
                 <label>📦 Línea de Producto</label>
@@ -781,9 +724,7 @@
                         <span id="product-selected-text">Todos los productos</span>
                         <i class="fas fa-chevron-down"></i>
                     </button>
-                    <div class="dropdown-panel" id="product-dropdown-panel">
-                        <!-- Los checkboxes se generarán dinámicamente -->
-                    </div>
+                    <div class="dropdown-panel" id="product-dropdown-panel"></div>
                 </div>
             </div>
             <div class="filter-box">
@@ -802,7 +743,7 @@
             <div class="kpi-card-flat"><div><div class="kpi-flat-label">GLOBAL (NAP)</div><div class="kpi-flat-value" id="kpi-nap-total">0</div></div><div class="kpi-flat-desc"><i class="fa-solid fa-chart-line"></i> Prima anual neta</div></div>
             <div class="kpi-card-flat"><div><div class="kpi-flat-label">Pólizas Emitidas</div><div class="kpi-flat-value" id="kpi-polizas-totales">0</div></div><div class="kpi-flat-desc"><i class="fa-solid fa-file-signature"></i> Contratos emitidos</div></div>
             <div class="kpi-card-flat"><div><div class="kpi-flat-label">AGENTES ACTIVOS</div><div class="kpi-flat-value" id="kpi-agentes-activos">0</div></div><div class="kpi-flat-desc"><i class="fa-solid fa-user-tie"></i> Productores únicos</div></div>
-            <div class="kpi-card-flat"><div><div class="kpi-flat-label">Estados Líderes</div><div class="kpi-flat-value" id="kpi-top-estados" style="font-size: 1rem; font-weight:700;">—</div></div><div class="kpi-flat-desc"><i class="fa-solid fa-map-pin"></i> Top 3 regiones</div></div>
+            <div class="kpi-card-flat"><div><div class="kpi-flat-label">Estados Líderes</div><div class="kpi-flat-value" id="kpi-top-estados" style="font-size: 1rem; font-weight:500;">—</div></div><div class="kpi-flat-desc"><i class="fa-solid fa-map-pin"></i> Top 3 regiones</div></div>
         </div>
 
         <div class="visual-matrix">
@@ -815,9 +756,9 @@
             <div class="block-table-card">
                 <div class="table-toolbar-top"><h3>Top 5 Agentes</h3></div>
                 <div class="overflow-wrapper">
-                    <table>
+                    <table class="top-agentes-table">
                         <thead>
-                            <tr><th class="text-center">#</th><th class="text-left">Asesor</th><th class="text-right">NAP</th><th class="text-right">Persistencia</th></tr>
+                            <tr><th class="text-left">AGENTE</th><th class="text-center">NAP</th><th class="text-center">PERSISTENCIA</th></tr>
                         </thead>
                         <tbody id="tbody-top-agentes"></tbody>
                     </table>
@@ -848,7 +789,17 @@
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Agente</th><th class="text-left">Producto</th><th class="text-left">Código Póliza</th><th class="text-right">NAP</th><th class="text-center">Estatus</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 50px;"></th>
+                            <th class="text-left">Agente</th>
+                            <th class="text-left">Producto</th>
+                            <th class="text-left">Código Póliza</th>
+                            <th class="text-center">Comisión</th>
+                            <th class="text-right">NAP</th>
+                            <th class="text-center">Estatus</th>
+                        </tr>
+                    </thead>
                     <tbody id="tbody-detallado-polizas"></tbody>
                 </table>
             </div>
@@ -861,20 +812,27 @@
                 <h3><i class="fa-solid fa-users-viewfinder"></i> Contrataciones</h3>
                 <div class="search-wrapper">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="search-contrataciones" placeholder="Buscar agente / upline...">
+                    <input type="text" id="search-contrataciones" placeholder="Buscar agente...">
                     <button class="clear-search" data-search="contrataciones"><i class="fas fa-times-circle"></i></button>
                 </div>
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Agente</th><th class="text-center">Último proceso</th><th class="text-center">Estatus actual</th><th class="text-left">Upline</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 50px;"></th>
+                            <th class="text-left">AGENTE</th>
+                            <th class="text-center">ÚLTIMO PROCESO</th>
+                            <th class="text-center">ESTATUS ACTUAL</th>
+                        </tr>
+                    </thead>
                     <tbody id="tbody-contrataciones"></tbody>
                 </table>
             </div>
             <div id="contrataciones-btn-container" class="btn-group-expand"></div>
         </div>
 
-        <div class="section-separator">🏢 Jerarquía</div>
+        <div class="section-separator">🏢 Estructura de Agentes</div>
         <div class="block-table-card">
             <div class="table-toolbar-top">
                 <h3><i class="fa-solid fa-sitemap"></i> Estructura de Agentes</h3>
@@ -886,25 +844,75 @@
             </div>
             <div class="overflow-wrapper">
                 <table>
-                    <thead><tr><th class="text-center" style="width: 50px;"></th><th class="text-left">Agente</th><th class="text-left">ID Producer</th><th class="text-center">Nivel actual</th><th class="text-left">Upline</th></tr></thead>
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 50px;"></th>
+                            <th class="text-left">AGENTE</th>
+                            <th class="text-left">ID PRODUCER</th>
+                            <th class="text-center">NIVEL ACTUAL</th>
+                        </tr>
+                    </thead>
                     <tbody id="tbody-jerarquia"></tbody>
                 </table>
             </div>
             <div id="jerarquia-btn-container" class="btn-group-expand"></div>
         </div>
 
+        <!-- SECCIÓN COMISIONES POR PÓLIZA -->
+        <div class="section-separator">💰 Comisiones por Póliza</div>
+        <div class="block-table-card">
+            <div class="table-toolbar-top">
+                <h3><i class="fa-solid fa-dollar-sign"></i> Comisiones por Póliza</h3>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                    <div class="search-wrapper" style="width: auto; min-width: 180px;">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="search-comisiones" placeholder="Buscar cliente, código...">
+                        <button class="clear-search" data-search="comisiones"><i class="fas fa-times-circle"></i></button>
+                    </div>
+                    <select id="comision-status-filter" class="filter-element filter-inline">
+                        <option value="TODOS">Estatus: Todos</option>
+                    </select>
+                    <select id="comision-month-filter" class="filter-element filter-inline">
+                        <option value="TODOS">Mes Activación: Todos</option>
+                    </select>
+                </div>
+            </div>
+            <div class="overflow-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 50px;"></th>
+                            <th class="text-left">CÓDIGO PÓLIZA</th>
+                            <th class="text-left">CLIENTE</th>
+                            <th class="text-right">NAP</th>
+                            <th class="text-right">COMISIÓN</th>
+                            <th class="text-center">ESTATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-comisiones"></tbody>
+                </table>
+            </div>
+            <div id="comisiones-btn-container" class="btn-group-expand"></div>
+        </div>
+
         <div class="section-separator">💰 Seguimiento Pagos</div>
         <div class="block-table-card">
             <div class="table-toolbar-top">
                 <h3><i class="fa-solid fa-credit-card"></i> Seguimiento Pagos</h3>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
                     <div class="search-wrapper" style="width: auto; min-width: 180px;">
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" id="search-pagos" placeholder="Cliente, código póliza...">
                         <button class="clear-search" data-search="pagos"><i class="fas fa-times-circle"></i></button>
                     </div>
-                    <select id="payment-tracking-filter" class="filter-element" style="width: auto; background: #F8FAFC; color: #1A2C3E; padding: 6px 12px; border-radius:20px;">
+                    <select id="payment-tracking-filter" class="filter-element filter-inline">
                         <option value="TODOS">Seguimiento: Todos</option>
+                    </select>
+                    <select id="payment-month-filter" class="filter-element filter-inline">
+                        <option value="TODOS">Todos los meses</option>
+                    </select>
+                    <select id="payment-status-filter" class="filter-element filter-inline">
+                        <option value="TODOS">Todos los estatus</option>
                     </select>
                 </div>
             </div>
@@ -920,22 +928,29 @@
 </div>
 
 <script>
-    // URLs actualizadas
+    // ==================== URLs ====================
     const URL_PRODUCCION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRa9NeyPlybmzHzoIwIItq20pONLLgFncynNsRaUrgN_2AkcWllA4rpivy3jiHY7g/pub?output=csv";
     const URL_CONTRATACION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRSHB4o3aQg2idd43uIe5qYEKDI0oXclGC3yakZ7BKO0YFh1NxAlMSIx7_m2mSCrg/pub?output=csv";
     const URL_JERARQUIA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiasPJsf35tv7RzV6-Px5_pDKCw1Rkw-PW40OWiB74ghaNkBuK_KjEgpu1AqCy0g/pub?output=csv";
     const URL_PAGOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKXEHJiZsjkKXLHrqn2VkVBUcYQcc-r24q0wBtBo-EFCRlFCdJlMt157ruVI8grw/pub?output=csv";
+    const URL_COMISIONES = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP21RuFm0zpHEm1gA0eaXeV19nZCopySix6igoRa7P03jTRn3klX0J2PzP3rAnaQ/pub?output=csv";
 
-    let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [];
+    let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [], rawComisiones = [];
     let filteredProduccion = [];
     let chartMonthly = null, chartStatus = null;
     let datePicker = null;
 
-    let polizasExpandidas = false, contratacionesExpandidas = false, jerarquiaExpandidas = false, pagosExpandidos = false;
-
-    // Variables para el dropdown de productos
-    let selectedProducts = []; // Array con los nombres de productos seleccionados
+    let polizasExpandidas = false, contratacionesExpandidas = false, jerarquiaExpandidas = false, pagosExpandidos = false, comisionesExpandidas = false;
+    let selectedProducts = [];
     let allProductsList = [];
+    let selectedStatuses = ['ACTIVAS', 'PENDIENTES', 'SUSPENDIDAS', 'TERMINADAS']; // todos seleccionados por defecto
+
+    // Filtros de comisiones
+    let comisionStatusFilter = "TODOS";
+    let comisionMonthFilter = "TODOS";
+    
+    // Set para saber qué códigos de póliza tienen comisión
+    let comisionCodesSet = new Set();
 
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 1 }).format(val / 100);
@@ -958,31 +973,47 @@
         await cargarFuentesExternas();
         initClearButtons();
         initProductDropdown();
+        initStatusDropdown();
     });
 
     function initControls() {
         datePicker = flatpickr("#date-range-picker", { mode: "range", dateFormat: "Y-m-d", locale: "es", onChange: () => { resetearExpansiones(); aplicarFiltros(); } });
-        document.getElementById("status-filter").addEventListener("change", () => { resetearExpansiones(); aplicarFiltros(); });
-        document.getElementById("agent-filter").addEventListener("change", () => { aplicarFiltros(); renderTablaJerarquia(); renderTablaPagosAgrupados(); });
+        document.getElementById("agent-filter").addEventListener("change", () => { aplicarFiltros(); renderTablaJerarquia(); renderTablaPagosAgrupados(); renderTablaComisiones(); });
         document.getElementById("payment-tracking-filter").addEventListener("change", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
+        document.getElementById("payment-month-filter").addEventListener("change", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
+        document.getElementById("payment-status-filter").addEventListener("change", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
         document.getElementById("search-polizas").addEventListener("input", () => { polizasExpandidas = false; renderTablaPolizasDetalle(); });
         document.getElementById("search-contrataciones").addEventListener("input", () => { contratacionesExpandidas = false; renderTablaContrataciones(); });
         document.getElementById("search-jerarquia").addEventListener("input", () => { jerarquiaExpandidas = false; renderTablaJerarquia(); });
         document.getElementById("search-pagos").addEventListener("input", () => { pagosExpandidos = false; renderTablaPagosAgrupados(); });
+        document.getElementById("search-comisiones").addEventListener("input", () => { comisionesExpandidas = false; renderTablaComisiones(); });
+        
+        // Filtros de comisiones
+        document.getElementById("comision-status-filter").addEventListener("change", (e) => { comisionStatusFilter = e.target.value; comisionesExpandidas = false; renderTablaComisiones(); });
+        document.getElementById("comision-month-filter").addEventListener("change", (e) => { comisionMonthFilter = e.target.value; comisionesExpandidas = false; renderTablaComisiones(); });
+
         document.getElementById("btn-clear-filters").addEventListener("click", () => {
-            document.getElementById("status-filter").value = "TODAS";
-            // Limpiar selección de productos (dropdown)
-            selectedProducts = [];
+            selectedStatuses = ['ACTIVAS', 'PENDIENTES', 'SUSPENDIDAS', 'TERMINADAS'];
+            updateStatusDropdownText();
+            renderStatusCheckboxes();
+            selectedProducts = [...allProductsList];
             updateProductDropdownText();
-            renderProductCheckboxes(); // refrescar checkboxes
+            renderProductCheckboxes();
             document.getElementById("agent-filter").value = "TODOS";
             document.getElementById("payment-tracking-filter").value = "TODOS";
+            document.getElementById("payment-month-filter").value = "TODOS";
+            document.getElementById("payment-status-filter").value = "TODOS";
+            document.getElementById("comision-status-filter").value = "TODOS";
+            document.getElementById("comision-month-filter").value = "TODOS";
+            comisionStatusFilter = "TODOS";
+            comisionMonthFilter = "TODOS";
             datePicker.clear();
             resetearExpansiones();
             if (rawProduccion.length) establecerRangoFechaDefault();
             aplicarFiltros();
             renderTablaJerarquia();
             renderTablaPagosAgrupados();
+            renderTablaComisiones();
         });
         document.getElementById("btn-refresh-data").addEventListener("click", async () => { await cargarFuentesExternas(); });
     }
@@ -1007,63 +1038,54 @@
     function initProductDropdown() {
         const btn = document.getElementById('product-dropdown-btn');
         const panel = document.getElementById('product-dropdown-panel');
-        btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            panel.classList.toggle('show');
-        });
-        // Cerrar al hacer clic fuera
-        document.addEventListener('click', function(e) {
-            if (!btn.contains(e.target) && !panel.contains(e.target)) {
-                panel.classList.remove('show');
-            }
-        });
+        btn.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('show'); });
+        document.addEventListener('click', function(e) { if (!btn.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('show'); });
+    }
+
+    function initStatusDropdown() {
+        const btn = document.getElementById('status-dropdown-btn');
+        const panel = document.getElementById('status-dropdown-panel');
+        btn.addEventListener('click', (e) => { e.stopPropagation(); panel.classList.toggle('show'); });
+        document.addEventListener('click', function(e) { if (!btn.contains(e.target) && !panel.contains(e.target)) panel.classList.remove('show'); });
     }
 
     function renderProductCheckboxes() {
         const panel = document.getElementById('product-dropdown-panel');
         if (!panel) return;
-        if (allProductsList.length === 0) {
-            panel.innerHTML = '<div class="checkbox-option" style="justify-content:center;">Sin productos</div>';
-            return;
-        }
-        let html = `<div class="checkbox-option"><input type="checkbox" id="select-all-products" ${selectedProducts.length === allProductsList.length ? 'checked' : ''}> <label for="select-all-products">Seleccionar todos</label></div><div class="divider-dropdown"></div>`;
+        if (allProductsList.length === 0) { panel.innerHTML = '<div class="checkbox-option" style="justify-content:center;">Sin productos</div>'; return; }
+        let html = '';
         allProductsList.forEach(prod => {
             const checked = selectedProducts.includes(prod) ? 'checked' : '';
             html += `<div class="checkbox-option"><input type="checkbox" value="${prod.replace(/"/g, '&quot;')}" ${checked}> <label>${prod}</label></div>`;
         });
         panel.innerHTML = html;
-        // Eventos
-        const selectAllCheck = document.getElementById('select-all-products');
-        if (selectAllCheck) {
-            selectAllCheck.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    selectedProducts = [...allProductsList];
-                } else {
-                    selectedProducts = [];
-                }
-                updateProductDropdownText();
-                // Actualizar checkboxes individuales
-                document.querySelectorAll('#product-dropdown-panel .checkbox-option input[type="checkbox"]').forEach(ch => {
-                    if (ch.id !== 'select-all-products') {
-                        ch.checked = selectedProducts.includes(ch.value);
-                    }
-                });
-                aplicarFiltros();
-            });
-        }
         document.querySelectorAll('#product-dropdown-panel .checkbox-option input[type="checkbox"]').forEach(ch => {
-            if (ch.id === 'select-all-products') return;
             ch.addEventListener('change', (e) => {
                 const val = e.target.value;
-                if (e.target.checked) {
-                    if (!selectedProducts.includes(val)) selectedProducts.push(val);
-                } else {
-                    selectedProducts = selectedProducts.filter(p => p !== val);
-                }
+                if (e.target.checked) { if (!selectedProducts.includes(val)) selectedProducts.push(val); }
+                else { selectedProducts = selectedProducts.filter(p => p !== val); }
                 updateProductDropdownText();
-                // Actualizar "Seleccionar todos"
-                const selectAll = document.getElementById('select-all-products');
-                if (selectAll) selectAll.checked = (selectedProducts.length === allProductsList.length);
+                aplicarFiltros();
+            });
+        });
+    }
+
+    function renderStatusCheckboxes() {
+        const panel = document.getElementById('status-dropdown-panel');
+        if (!panel) return;
+        const estados = ['ACTIVAS', 'PENDIENTES', 'SUSPENDIDAS', 'TERMINADAS'];
+        let html = '';
+        estados.forEach(est => {
+            const checked = selectedStatuses.includes(est) ? 'checked' : '';
+            html += `<div class="checkbox-option"><input type="checkbox" value="${est}" ${checked}> <label>${est}</label></div>`;
+        });
+        panel.innerHTML = html;
+        document.querySelectorAll('#status-dropdown-panel .checkbox-option input[type="checkbox"]').forEach(ch => {
+            ch.addEventListener('change', (e) => {
+                const val = e.target.value;
+                if (e.target.checked) { if (!selectedStatuses.includes(val)) selectedStatuses.push(val); }
+                else { selectedStatuses = selectedStatuses.filter(s => s !== val); }
+                updateStatusDropdownText();
                 aplicarFiltros();
             });
         });
@@ -1072,38 +1094,59 @@
     function updateProductDropdownText() {
         const span = document.getElementById('product-selected-text');
         if (!span) return;
-        if (selectedProducts.length === 0) {
-            span.textContent = 'Todos los productos';
-        } else if (selectedProducts.length === 1) {
-            span.textContent = selectedProducts[0];
-        } else {
-            span.textContent = `${selectedProducts.length} seleccionados`;
-        }
+        if (selectedProducts.length === 0) span.textContent = 'Ningún producto';
+        else if (selectedProducts.length === 1) span.textContent = selectedProducts[0];
+        else if (selectedProducts.length === allProductsList.length && allProductsList.length > 0) span.textContent = 'Todos los productos';
+        else span.textContent = `${selectedProducts.length} productos seleccionados`;
     }
 
-    function resetearExpansiones() { polizasExpandidas = contratacionesExpandidas = jerarquiaExpandidas = pagosExpandidos = false; }
+    function updateStatusDropdownText() {
+        const span = document.getElementById('status-selected-text');
+        if (!span) return;
+        if (selectedStatuses.length === 0) span.textContent = 'Ningún estado';
+        else if (selectedStatuses.length === 4) span.textContent = 'Todos los estados';
+        else span.textContent = `${selectedStatuses.length} estados seleccionados`;
+    }
+
+    function resetearExpansiones() { polizasExpandidas = contratacionesExpandidas = jerarquiaExpandidas = pagosExpandidos = comisionesExpandidas = false; }
 
     async function cargarFuentesExternas() {
         try {
             showLoader(true);
             ocultarError();
-            const [textProd, textCont, textJer, textPagos] = await Promise.all([
+            const [textProd, textCont, textJer, textPagos, textComisiones] = await Promise.all([
                 fetchWithRetry(URL_PRODUCCION), fetchWithRetry(URL_CONTRATACION),
-                fetchWithRetry(URL_JERARQUIA), fetchWithRetry(URL_PAGOS)
+                fetchWithRetry(URL_JERARQUIA), fetchWithRetry(URL_PAGOS),
+                fetchWithRetry(URL_COMISIONES)
             ]);
             rawProduccion = parseCSVProduccion(textProd);
             rawContratacion = parseCSVContratacion(textCont);
             rawJerarquia = parseCSVJerarquia(textJer);
             rawPagos = parseCSVPagos(textPagos);
+            rawComisiones = parseCSVComisiones(textComisiones);
+            actualizarComisionCodesSet();
             poblarFiltrosDinamicos();
             poblarFiltrosPagos();
+            poblarFiltrosComisiones();
             establecerRangoFechaDefault();
             aplicarFiltros();
             renderTablaContrataciones();
             renderTablaJerarquia();
             renderTablaPagosAgrupados();
+            renderTablaComisiones();
         } catch (err) { console.error(err); mostrarErrorGlobal(); cargarDatosMock(); }
         finally { showLoader(false); }
+    }
+
+    function actualizarComisionCodesSet() {
+        comisionCodesSet.clear();
+        if (rawComisiones && rawComisiones.length) {
+            rawComisiones.forEach(c => {
+                if (c.CODIGO_POLIZA && c.CODIGO_POLIZA.trim() !== "") {
+                    comisionCodesSet.add(c.CODIGO_POLIZA.trim());
+                }
+            });
+        }
     }
 
     function cargarDatosMock() {
@@ -1126,16 +1169,23 @@
             { CLIENTE: "Juan Pérez", CODIGO_POLIZA: "POL001", ID_PRODUCTO: "VIDA01", PAGADO_HASTA: "2025-02-28", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Transferencia", PRIMA: "1500" },
             { CLIENTE: "Ana Rodríguez", CODIGO_POLIZA: "POL002", ID_PRODUCTO: "SALUD02", PAGADO_HASTA: "2025-03-15", SEGUIMIENTO_PAGO: "Al día", ESTATUS: "Pagado", METODO_PAGO: "Tarjeta", PRIMA: "2500" }
         ];
+        rawComisiones = [
+            { CODIGO_POLIZA: "POL001", ID_PRODUCTO: "DVH25BV600", CLIENTE: "LISDELMIS TEJEDOR PEREZ", ESTATUS: "ACTIVA", ACTIVACION: "12/1/2025", ESTADO: "FL", METODO_PAGO: "MON", NAP: "467.88", PORC_COMISION: "30%", ADVANCE: "$105.27", COMISION_POLIZA: "" },
+            { CODIGO_POLIZA: "POL003", ID_PRODUCTO: "DVH25BV600", CLIENTE: "MARITRYNI REMEDIOS ROMERO", ESTATUS: "ACTIVA", ACTIVACION: "12/1/2025", ESTADO: "FL", METODO_PAGO: "MON", NAP: "610.08", PORC_COMISION: "30%", ADVANCE: "$137.26", COMISION_POLIZA: "" }
+        ];
+        actualizarComisionCodesSet();
         poblarFiltrosDinamicos();
         poblarFiltrosPagos();
+        poblarFiltrosComisiones();
         establecerRangoFechaDefault();
         aplicarFiltros();
         renderTablaContrataciones();
         renderTablaJerarquia();
         renderTablaPagosAgrupados();
+        renderTablaComisiones();
     }
 
-    // Funciones de parseo
+    // ==================== PARSEO GENERAL ====================
     function parseCSVGeneral(csvText) {
         const rows = []; let inQuote = false, row = [], field = "";
         for (let i = 0; i < csvText.length; i++) {
@@ -1152,6 +1202,7 @@
         if (field || row.length) { row.push(field); if (row.length > 1 || row[0] !== "") rows.push(row); }
         return rows;
     }
+
     function parseCSVProduccion(csvText) {
         const rows = parseCSVGeneral(csvText);
         if (!rows.length) return [];
@@ -1161,6 +1212,7 @@
             return { AGENTE: obj["Agente"] || "", ID_PRODUCER: obj["ID Producer"] || "", PRODUCTO: obj["Producto"] || "", PRIMA_NAP: obj["Prima NAP"] || "0", CODIGO_POLIZA: obj["Codigo Poliza"] || "", EMISION: obj["Emision"] || "", ACTIVACION: obj["Activacion"] || obj["Emision"] || "", ESTATUS: obj["Estatus"] || "", ESTADO: obj["Estado"] || "", CLIENTE: obj["Cliente"] || "", DIRECCION: obj["Direccion"] || "", CIUDAD: obj["Ciudad"] || "", ZIP_CODE: obj["Zip Code"] || "", TELEFONO: obj["Telefono"] || "" };
         });
     }
+
     function parseCSVContratacion(csvText) {
         const rows = parseCSVGeneral(csvText);
         if (!rows.length) return [];
@@ -1170,6 +1222,7 @@
             return { AGENTE: obj["Agente"] || "", FECHA_CREACION: obj["Fecha de Creacion"] || "", TIPO_PROCESO: obj["Tipo de Proceso"] || "", ESTATUS: obj["Estatus"] || "", UPLINE: obj["Upline"] || "", CODIGO_NIVEL: obj["Codigo Nivel %"] || "" };
         });
     }
+
     function parseCSVJerarquia(csvText) {
         const rows = parseCSVGeneral(csvText);
         if (!rows.length) return [];
@@ -1179,6 +1232,7 @@
             return { AGENTE: obj["Agente"] || "", NPN_AGENTE: obj["NPN Agente"] || "", ID_PRODUCER: obj["ID Producer"] || "", FECHA_INGRESO: obj["Fecha Ingreso"] || "", CODIGO_NIVEL: obj["Codigo Nivel"] || "", NPN_UPLINE: obj["NPN Upline"] || "", UPLINE: obj["Upline"] || "" };
         });
     }
+
     function parseCSVPagos(csvText) {
         const rows = parseCSVGeneral(csvText);
         if (!rows.length) return [];
@@ -1189,16 +1243,94 @@
         });
     }
 
+    function parseCSVComisiones(csvText) {
+        const rows = parseCSVGeneral(csvText);
+        if (!rows.length) return [];
+        const headers = rows[0].map(h => h.trim());
+        
+        function normalizar(str) {
+            return str.toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .replace(/[^a-z0-9]/g, "_");
+        }
+        
+        const normalizados = headers.map(normalizar);
+        
+        function encontrarIndice(palabrasClave) {
+            for (let i = 0; i < normalizados.length; i++) {
+                for (const kw of palabrasClave) {
+                    if (normalizados[i].includes(kw)) return i;
+                }
+            }
+            return -1;
+        }
+        
+        const idxMap = {};
+        
+        let idx = encontrarIndice(["codigo_de_poliza", "codigo_poliza", "poliza"]);
+        if (idx !== -1) idxMap.CODIGO_POLIZA = idx;
+        
+        idx = encontrarIndice(["id_producto", "producto_id"]);
+        if (idx !== -1) idxMap.ID_PRODUCTO = idx;
+        
+        idx = encontrarIndice(["cliente"]);
+        if (idx !== -1) idxMap.CLIENTE = idx;
+        
+        idx = encontrarIndice(["estatus"]);
+        if (idx !== -1) idxMap.ESTATUS = idx;
+        
+        idx = encontrarIndice(["activacion"]);
+        if (idx !== -1) idxMap.ACTIVACION = idx;
+        
+        idx = encontrarIndice(["estado"]);
+        if (idx !== -1) idxMap.ESTADO = idx;
+        
+        idx = encontrarIndice(["metodo_pago", "pago"]);
+        if (idx !== -1) idxMap.METODO_PAGO = idx;
+        
+        idx = encontrarIndice(["nap", "hap"]);
+        if (idx !== -1) idxMap.NAP = idx;
+        
+        let porcIdx = -1;
+        for (let i = 0; i < headers.length; i++) {
+            const original = headers[i].toLowerCase();
+            if ((original.includes("comision") || original.includes("comisión")) && original.includes("%")) {
+                porcIdx = i;
+                break;
+            }
+        }
+        if (porcIdx === -1) porcIdx = encontrarIndice(["porc_comision", "comision"]);
+        if (porcIdx !== -1) idxMap.PORC_COMISION = porcIdx;
+        
+        idx = encontrarIndice(["advance"]);
+        if (idx !== -1) idxMap.ADVANCE = idx;
+        
+        idx = encontrarIndice(["comision_de_la_poliza", "comision_poliza"]);
+        if (idx !== -1) idxMap.COMISION_POLIZA = idx;
+        
+        return rows.slice(1).map(line => {
+            const obj = {};
+            for (const [claveInterna, idx] of Object.entries(idxMap)) {
+                obj[claveInterna] = line[idx] ? line[idx].trim() : "";
+            }
+            return obj;
+        });
+    }
+
+    // ==================== FILTROS DINÁMICOS ====================
     function poblarFiltrosDinamicos() {
         const prodSet = new Set(), agentSet = new Set();
         rawProduccion.forEach(p => { if(p.PRODUCTO) prodSet.add(p.PRODUCTO.trim()); if(p.AGENTE) agentSet.add(p.AGENTE.trim()); });
         allProductsList = [...prodSet].sort();
-        // Actualizar dropdown de productos
+        // 🔥 AHORA seleccionamos todos los productos por defecto ANTES de renderizar los checkboxes
+        selectedProducts = [...allProductsList];
         renderProductCheckboxes();
-        // Agentes
+        renderStatusCheckboxes();
         const agentSel = document.getElementById("agent-filter");
         agentSel.innerHTML = '<option value="TODOS">Todos los Agentes</option>';
         [...agentSet].sort().forEach(a => { let opt = document.createElement("option"); opt.value = a; opt.textContent = a; agentSel.appendChild(opt); });
+        // Actualizar el texto del botón de productos
+        updateProductDropdownText();
     }
 
     function poblarFiltrosPagos() {
@@ -1207,6 +1339,54 @@
         const trackingSel = document.getElementById("payment-tracking-filter");
         trackingSel.innerHTML = '<option value="TODOS">Seguimiento: Todos</option>';
         [...trackingSet].sort().forEach(t => { let opt = document.createElement("option"); opt.value = t; opt.textContent = t; trackingSel.appendChild(opt); });
+
+        const monthsSet = new Set();
+        rawPagos.forEach(p => {
+            if(p.PAGADO_HASTA && p.PAGADO_HASTA.trim()) {
+                let date = new Date(p.PAGADO_HASTA);
+                if(isNaN(date)) { const parts = p.PAGADO_HASTA.split(/[-/]/); if(parts.length===3) date = new Date(parts[2], parts[1]-1, parts[0]); }
+                if(!isNaN(date)) monthsSet.add(`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`);
+            }
+        });
+        const monthSelect = document.getElementById("payment-month-filter");
+        monthSelect.innerHTML = '<option value="TODOS">Todos los meses</option>';
+        [...monthsSet].sort().reverse().forEach(key => {
+            const [year, month] = key.split('-');
+            const monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
+            const opt = document.createElement("option"); opt.value = key; opt.textContent = `${monthName} ${year}`;
+            monthSelect.appendChild(opt);
+        });
+
+        const statusSet = new Set();
+        rawPagos.forEach(p => { if(p.ESTATUS && p.ESTATUS.trim()) statusSet.add(p.ESTATUS.trim()); });
+        const statusSelect = document.getElementById("payment-status-filter");
+        statusSelect.innerHTML = '<option value="TODOS">Todos los estatus</option>';
+        [...statusSet].sort().forEach(s => { let opt = document.createElement("option"); opt.value = s; opt.textContent = s; statusSelect.appendChild(opt); });
+    }
+
+    function poblarFiltrosComisiones() {
+        const statusSet = new Set();
+        const monthSet = new Set();
+        rawComisiones.forEach(c => {
+            if (c.ESTATUS && c.ESTATUS.trim()) statusSet.add(c.ESTATUS.trim());
+            if (c.ACTIVACION && c.ACTIVACION.trim()) {
+                let date = new Date(c.ACTIVACION);
+                if (isNaN(date)) { const parts = c.ACTIVACION.split(/[-/]/); if (parts.length === 3) date = new Date(parts[2], parts[1]-1, parts[0]); }
+                if (!isNaN(date)) monthSet.add(`${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`);
+            }
+        });
+        const statusSelect = document.getElementById("comision-status-filter");
+        statusSelect.innerHTML = '<option value="TODOS">Estatus: Todos</option>';
+        [...statusSet].sort().forEach(s => { let opt = document.createElement("option"); opt.value = s; opt.textContent = s; statusSelect.appendChild(opt); });
+        
+        const monthSelect = document.getElementById("comision-month-filter");
+        monthSelect.innerHTML = '<option value="TODOS">Mes Activación: Todos</option>';
+        [...monthSet].sort().reverse().forEach(key => {
+            const [year, month] = key.split('-');
+            const monthName = new Date(year, month-1, 1).toLocaleString('es', { month: 'long' });
+            const opt = document.createElement("option"); opt.value = key; opt.textContent = `${monthName} ${year}`;
+            monthSelect.appendChild(opt);
+        });
     }
 
     function establecerRangoFechaDefault() {
@@ -1216,21 +1396,21 @@
     }
 
     function aplicarFiltros() {
-        const status = document.getElementById("status-filter").value;
         const agent = document.getElementById("agent-filter").value;
         const [start, end] = datePicker.selectedDates;
-        
         filteredProduccion = rawProduccion.filter(row => {
-            if (status !== "TODAS") {
-                const est = (row.ESTATUS || "").toUpperCase();
-                let ok = false;
-                if (status === "ACTIVAS" && (est === "ACTIVO" || est === "ACTIVA")) ok = true;
-                else if (status === "PENDIENTES" && est === "PENDIENTE") ok = true;
-                else if (status === "SUSPENDIDAS" && est === "SUSPENDIDA") ok = true;
-                else if (status === "TERMINADAS" && est === "TERMINADA") ok = true;
-                if (!ok) return false;
+            // Filtro de estado múltiple
+            if (selectedStatuses.length > 0) {
+                const estatusRaw = (row.ESTATUS || "").toUpperCase();
+                let estadoMatch = false;
+                for (let sel of selectedStatuses) {
+                    if (sel === "ACTIVAS" && (estatusRaw === "ACTIVO" || estatusRaw === "ACTIVA")) { estadoMatch = true; break; }
+                    if (sel === "PENDIENTES" && estatusRaw === "PENDIENTE") { estadoMatch = true; break; }
+                    if (sel === "SUSPENDIDAS" && estatusRaw === "SUSPENDIDA") { estadoMatch = true; break; }
+                    if (sel === "TERMINADAS" && estatusRaw === "TERMINADA") { estadoMatch = true; break; }
+                }
+                if (!estadoMatch) return false;
             }
-            // Filtro múltiple de productos (desde dropdown)
             if (selectedProducts.length > 0 && !selectedProducts.includes(row.PRODUCTO)) return false;
             if (agent !== "TODOS" && row.AGENTE !== agent) return false;
             if (start && end) {
@@ -1239,7 +1419,7 @@
             }
             return true;
         });
-        actualizarKPIs(); renderGraficos(); renderTopAgentes(); renderTablaProductosShare(); renderPersistenciaGlobal(); renderTablaPolizasDetalle(); renderTablaJerarquia(); renderTablaPagosAgrupados();
+        actualizarKPIs(); renderGraficos(); renderTopAgentes(); renderTablaProductosShare(); renderPersistenciaGlobal(); renderTablaPolizasDetalle(); renderTablaJerarquia(); renderTablaPagosAgrupados(); renderTablaComisiones();
     }
 
     function actualizarKPIs() {
@@ -1310,10 +1490,10 @@
         });
         const top = Object.entries(agentes).sort((a,b)=>b[1].nap - a[1].nap).slice(0,5);
         const tbody = document.getElementById("tbody-top-agentes"); tbody.innerHTML = "";
-        if(!top.length) { tbody.innerHTML="<tr><td colspan='4' class='text-center'>Sin información</td></tr>"; return; }
-        top.forEach(([nombre,ag],idx) => {
+        if(!top.length) { tbody.innerHTML="<tr><td colspan='3' class='text-center'>Sin información</td></tr>"; return; }
+        top.forEach(([nombre,ag]) => {
             const pers = ag.polizas ? ((ag.polizas-ag.terminadas)/ag.polizas)*100 : 100;
-            tbody.innerHTML += `<tr><td class="text-center"><strong>${idx+1}</strong></td><td class="text-left"><strong>${nombre}</strong></td><td class="text-right">${formatCurrencyNoSymbol(ag.nap)}</td><td class="text-right" style="color:${pers>=80?'#2A9D8F':'#E76F51'}; font-weight:600;">${formatPercent(pers)}</td></tr>`;
+            tbody.innerHTML += `<tr><td class="text-left">${nombre}</td><td class="text-center">${formatCurrencyNoSymbol(ag.nap)}</td><td class="text-center" style="color:${pers>=80?'#2A9D8F':'#E76F51'};">${formatPercent(pers)}</td></tr>`;
         });
     }
 
@@ -1329,7 +1509,7 @@
         const tbody = document.getElementById("tbody-productos"); tbody.innerHTML = "";
         if(Object.keys(prodMap).length === 0) { tbody.innerHTML="<tr><td colspan='3' class='text-center'>Sin datos</td></tr>"; return; }
         Object.entries(prodMap).sort((a,b)=>b[1].nap - a[1].nap).forEach(([name,data]) => {
-            tbody.innerHTML += `<tr><td class="text-left"><strong>${name}</strong></td><td class="text-center">${data.polizas}</td><td class="text-right">${formatCurrencyNoSymbol(data.nap)}</td></tr>`;
+            tbody.innerHTML += `<tr><td class="text-left">${name}</td><td class="text-center">${data.polizas}</td><td class="text-right">${formatCurrencyNoSymbol(data.nap)}</td></tr>`;
         });
     }
 
@@ -1338,7 +1518,7 @@
         let source = filteredProduccion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.CLIENTE||"").toLowerCase().includes(query) || (r.CODIGO_POLIZA||"").toLowerCase().includes(query));
         const tbody = document.getElementById("tbody-detallado-polizas"); tbody.innerHTML = "";
         const container = document.getElementById("polizas-btn-container"); container.innerHTML = "";
-        if(!source.length) { tbody.innerHTML="<tr><td colspan='6' class='text-center'>No hay coincidencias</td></tr>"; return; }
+        if(!source.length) { tbody.innerHTML="<tr><td colspan='7' class='text-center'>No hay coincidencias</td></tr>"; return; }
         let rows = polizasExpandidas ? source : source.slice(0,6);
         rows.forEach(row => {
             const nap = parseFloat(row.PRIMA_NAP.replace(/[^0-9.-]/g, ""));
@@ -1347,10 +1527,21 @@
             if(up==="ACTIVO"||up==="ACTIVA") pill="pill-active";
             else if(up==="PENDIENTE") pill="pill-pending";
             else if(up==="TERMINADA"||up==="SUSPENDIDA") pill="pill-failed";
+            
+            const tieneComision = comisionCodesSet.has(row.CODIGO_POLIZA);
+            const checkIcon = tieneComision ? '<i class="fa-solid fa-check-circle comision-check" style="color:#2A9D8F;" title="Tiene comisión asociada"></i>' : '<i class="fa-solid fa-circle-xmark comision-check" style="color:#8D99AE;" title="Sin comisión"></i>';
+            
             const master = document.createElement("tr"); master.className="interactive-row";
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left">${row.AGENTE||"N/A"}</td><td class="text-left">${row.PRODUCTO||"-"}</td><td class="text-left"><code>${row.CODIGO_POLIZA||"N/A"}</code></td><td class="text-right">${formatCurrencyNoSymbol(nap)}</td><td class="text-center"><span class="badge-pill-flat ${pill}">${row.ESTATUS||"PENDIENTE"}</span></td>`;
+            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
+                                <td class="text-left">${row.AGENTE||"N/A"}</td>
+                                <td class="text-left">${row.PRODUCTO||"-"}</td>
+                                <td class="text-left"><code>${row.CODIGO_POLIZA||"N/A"}</code></td>
+                                <td class="text-center">${checkIcon}</td>
+                                <td class="text-right">${formatCurrencyNoSymbol(nap)}</td>
+                                <td class="text-center"><span class="badge-pill-flat ${pill}">${row.ESTATUS||"PENDIENTE"}</span></td>`;
+            
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            detail.innerHTML = `<td colspan="6"><div class="expanded-detail-card"><div class="detail-grid">
+            detail.innerHTML = `<td colspan="7"><div class="expanded-detail-card"><div class="detail-grid">
                 <div class="detail-field"><span class="field-label"><i class="fa-regular fa-user"></i> Asegurado</span><span class="field-value">${row.CLIENTE||"—"}</span></div>
                 <div class="detail-field"><span class="field-label"><i class="fa-regular fa-calendar-check"></i> Fecha Activación</span><span class="field-value">${row.ACTIVACION||"—"}</span></div>
                 <div class="detail-field"><span class="field-label"><i class="fa-regular fa-calendar"></i> F. Emisión</span><span class="field-value">${row.EMISION||"—"}</span></div>
@@ -1371,7 +1562,7 @@
 
     function renderTablaContrataciones() {
         const query = document.getElementById("search-contrataciones").value.toLowerCase();
-        let filtered = rawContratacion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query) || (r.UPLINE||"").toLowerCase().includes(query));
+        let filtered = rawContratacion.filter(r => !query || (r.AGENTE||"").toLowerCase().includes(query));
         const groupMap = new Map();
         for(const rec of filtered) {
             const agente = rec.AGENTE;
@@ -1386,7 +1577,7 @@
         agentesData.sort((a,b) => new Date(b.latest.FECHA_CREACION) - new Date(a.latest.FECHA_CREACION));
         const tbody = document.getElementById("tbody-contrataciones"); tbody.innerHTML = "";
         const container = document.getElementById("contrataciones-btn-container"); container.innerHTML = "";
-        if(!agentesData.length) { tbody.innerHTML="<tr><td colspan='5' class='text-center'>Sin registros</td></tr>"; return; }
+        if(!agentesData.length) { tbody.innerHTML="<tr><td colspan='4' class='text-center'>Sin registros</td></tr>"; return; }
         let rows = contratacionesExpandidas ? agentesData : agentesData.slice(0,6);
         rows.forEach(item => {
             let badge = "pill-info";
@@ -1394,15 +1585,22 @@
             if(est === "CREATED - NEW") badge = "pill-pending";
             else if(est === "APROBADO") badge = "pill-active";
             const master = document.createElement("tr"); master.className="interactive-row";
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left"><strong>${item.agente}</strong></td><td class="text-center">${item.latest.FECHA_CREACION||"-"}</td><td class="text-center"><span class="badge-pill-flat ${badge}">${item.latest.ESTATUS||"En proceso"}</span></td><td class="text-left">${item.latest.UPLINE||"Directo"}</td>`;
+            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
+                                <td class="text-left">${item.agente}</td>
+                                <td class="text-center">${item.latest.FECHA_CREACION||"-"}</td>
+                                <td class="text-center"><span class="badge-pill-flat ${badge}">${item.latest.ESTATUS||"En proceso"}</span></td>`;
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
-            let html = `<div class="expanded-detail-card"><div class="detail-grid"><div class="detail-field"><span class="field-label">Nivel Actual</span><span class="field-value">${item.latest.CODIGO_NIVEL||"—"}</span></div>`;
+            let html = `<div class="expanded-detail-card"><div class="detail-grid">
+                            <div class="detail-field"><span class="field-label">UPLINE</span><span class="field-value">${item.latest.UPLINE||"Directo"}</span></div>
+                            <div class="detail-field"><span class="field-label">Nivel Actual</span><span class="field-value">${item.latest.CODIGO_NIVEL||"—"}</span></div>`;
             if(item.history.length) {
                 const prev = item.history[0];
-                html += `<div class="detail-field"><span class="field-label">Nivel Anterior</span><span class="field-value">${prev.CODIGO_NIVEL||"—"}</span></div><div class="detail-field"><span class="field-label">Fecha Proceso Anterior</span><span class="field-value">${prev.FECHA_CREACION||"—"}</span></div><div class="detail-field"><span class="field-label">Tipo Proceso Anterior</span><span class="field-value">${prev.TIPO_PROCESO||"—"}</span></div>`;
+                html += `<div class="detail-field"><span class="field-label">Nivel Anterior</span><span class="field-value">${prev.CODIGO_NIVEL||"—"}</span></div>
+                         <div class="detail-field"><span class="field-label">Fecha Proceso Anterior</span><span class="field-value">${prev.FECHA_CREACION||"—"}</span></div>
+                         <div class="detail-field"><span class="field-label">Tipo Proceso Anterior</span><span class="field-value">${prev.TIPO_PROCESO||"—"}</span></div>`;
             } else { html += `<div class="detail-field"><span class="field-label">Nivel Anterior</span><span class="field-value">—</span></div>`; }
             html += `</div></div>`;
-            detail.innerHTML = `<td colspan="5">${html}</td>`;
+            detail.innerHTML = `<td colspan="4">${html}</td>`;
             master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
             tbody.appendChild(master); tbody.appendChild(detail);
         });
@@ -1433,19 +1631,22 @@
         agentesData.sort((a,b) => (b.latest.FECHA_INGRESO||"").localeCompare(a.latest.FECHA_INGRESO||""));
         const tbody = document.getElementById("tbody-jerarquia"); tbody.innerHTML = "";
         const container = document.getElementById("jerarquia-btn-container"); container.innerHTML = "";
-        if(!agentesData.length) { tbody.innerHTML="<tr><td colspan='5' class='text-center'>Sin registros de jerarquía</td></tr>"; return; }
+        if(!agentesData.length) { tbody.innerHTML="<tr><td colspan='4' class='text-center'>Sin registros de jerarquía</td></tr>"; return; }
         let rows = jerarquiaExpandidas ? agentesData : agentesData.slice(0,6);
         rows.forEach(item => {
             const master = document.createElement("tr"); master.className="interactive-row";
-            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td><td class="text-left"><strong>${item.agente}</strong></td><td class="text-left">${item.latest.ID_PRODUCER}</td><td class="text-center">${item.latest.CODIGO_NIVEL}</td><td class="text-left">${item.latest.UPLINE}</td>`;
+            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
+                                <td class="text-left">${item.agente}</td>
+                                <td class="text-left">${item.latest.ID_PRODUCER}</td>
+                                <td class="text-center">${item.latest.CODIGO_NIVEL}</td>`;
             const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
             if(item.history.length) {
                 let html = `<div class="expanded-detail-card"><strong>Historial de cambios</strong><div class="overflow-wrapper"><table class="inner-payment-table"><thead><tr><th>Fecha Ingreso</th><th>Nivel</th><th>Upline</th><th>NPN Upline</th></tr></thead><tbody>`;
                 for(const h of item.history) html += `<tr><td>${h.FECHA_INGRESO||"-"}</td><td>${h.CODIGO_NIVEL||"-"}</td><td>${h.UPLINE||"-"}</td><td>${h.NPN_UPLINE||"-"}</td></tr>`;
-                html += `</tbody>}</div></div>`;
-                detail.innerHTML = `<td colspan="5">${html}</td>`;
+                html += `</tbody></table></div></div>`;
+                detail.innerHTML = `<td colspan="4">${html}</td>`;
             } else {
-                detail.innerHTML = `<td colspan="5"><div class="expanded-detail-card"><div class="detail-grid"><div class="detail-field"><span class="field-label">NPN Agente</span><span class="field-value">${item.latest.NPN_AGENTE||"—"}</span></div><div class="detail-field"><span class="field-label">Fecha Ingreso</span><span class="field-value">${item.latest.FECHA_INGRESO||"—"}</span></div><div class="detail-field"><span class="field-label">NPN Upline</span><span class="field-value">${item.latest.NPN_UPLINE||"—"}</span></div></div></div></td>`;
+                detail.innerHTML = `<td colspan="4"><div class="expanded-detail-card"><div class="detail-grid"><div class="detail-field"><span class="field-label">NPN Agente</span><span class="field-value">${item.latest.NPN_AGENTE||"—"}</span></div><div class="detail-field"><span class="field-label">Fecha Ingreso</span><span class="field-value">${item.latest.FECHA_INGRESO||"—"}</span></div><div class="detail-field"><span class="field-label">Upline</span><span class="field-value">${item.latest.UPLINE||"—"}</span></div><div class="detail-field"><span class="field-label">NPN Upline</span><span class="field-value">${item.latest.NPN_UPLINE||"—"}</span></div></div></div></td>`;
             }
             master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
             tbody.appendChild(master); tbody.appendChild(detail);
@@ -1460,18 +1661,30 @@
     function renderTablaPagosAgrupados() {
         const query = document.getElementById("search-pagos").value.toLowerCase();
         const tracking = document.getElementById("payment-tracking-filter").value;
-        let filtered = rawPagos.filter(p => !query || (p.CLIENTE||"").toLowerCase().includes(query) || (p.CODIGO_POLIZA||"").toLowerCase().includes(query));
+        const monthYear = document.getElementById("payment-month-filter").value;
+        const paymentStatus = document.getElementById("payment-status-filter").value;
+        let filtered = rawPagos.filter(p => {
+            if (!(p.CLIENTE||"").toLowerCase().includes(query) && !(p.CODIGO_POLIZA||"").toLowerCase().includes(query)) return false;
+            if (tracking !== "TODOS" && p.SEGUIMIENTO_PAGO !== tracking) return false;
+            if (paymentStatus !== "TODOS" && p.ESTATUS !== paymentStatus) return false;
+            if (monthYear !== "TODOS") {
+                let date = new Date(p.PAGADO_HASTA);
+                if(isNaN(date)) { const parts = p.PAGADO_HASTA.split(/[-/]/); if(parts.length===3) date = new Date(parts[2], parts[1]-1, parts[0]); }
+                if(!isNaN(date)) { const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`; if(key !== monthYear) return false; }
+                else return false;
+            }
+            return true;
+        });
         const groups = new Map();
         for(const pago of filtered) {
             const codigo = pago.CODIGO_POLIZA;
             if(!codigo) continue;
-            if(!groups.has(codigo)) groups.set(codigo, { rows:[], cliente:pago.CLIENTE, idProducto:pago.ID_PRODUCTO, numTrans:0, latestPaidUntil:null, trackingSet:new Set() });
+            if(!groups.has(codigo)) groups.set(codigo, { rows:[], cliente:pago.CLIENTE, idProducto:pago.ID_PRODUCTO, numTrans:0, latestPaidUntil:null });
             const g = groups.get(codigo);
             g.rows.push(pago);
             g.numTrans++;
             if(!g.cliente && pago.CLIENTE) g.cliente = pago.CLIENTE;
             if(!g.idProducto && pago.ID_PRODUCTO) g.idProducto = pago.ID_PRODUCTO;
-            if(pago.SEGUIMIENTO_PAGO) g.trackingSet.add(pago.SEGUIMIENTO_PAGO);
             if(pago.PAGADO_HASTA) {
                 let d = new Date(pago.PAGADO_HASTA);
                 if(isNaN(d)) { const parts = pago.PAGADO_HASTA.split(/[-/]/); if(parts.length===3) d = new Date(parts[2], parts[1]-1, parts[0]); }
@@ -1479,7 +1692,6 @@
             }
         }
         let filteredGroups = Array.from(groups.entries());
-        if(tracking !== "TODOS") filteredGroups = filteredGroups.filter(([_,g]) => g.trackingSet.has(tracking));
         let rows = pagosExpandidos ? filteredGroups : filteredGroups.slice(0,6);
         const tbody = document.getElementById("tbody-pagos-agrupados"); tbody.innerHTML = "";
         const container = document.getElementById("pagos-btn-container"); container.innerHTML = "";
@@ -1496,7 +1708,7 @@
                 const estClass = (t.ESTATUS||"").toUpperCase() === 'PAGADO' ? 'pill-active' : 'pill-pending';
                 inner += `<tr><td>${t.PAGADO_HASTA||"—"}</td><td><span class="badge-pill-flat ${estClass}">${t.ESTATUS||"—"}</span></td><td>${t.METODO_PAGO||"—"}</td><td class="text-right">${formatCurrencyNoSymbol(prima)}</td><td>${t.SEGUIMIENTO_PAGO||"—"}</td></tr>`;
             }
-            inner += `</tbody>}</div></div>`;
+            inner += `</tbody></table></div></div>`;
             detail.innerHTML = `<td colspan="6">${inner}</td>`;
             master.addEventListener("click",(e)=>{e.stopPropagation(); const open=detail.style.display==="table-row"; detail.style.display=open?"none":"table-row"; master.classList.toggle("row-expanded-state",!open);});
             tbody.appendChild(master); tbody.appendChild(detail);
@@ -1508,8 +1720,91 @@
         }
     }
 
+    function renderTablaComisiones() {
+        const query = document.getElementById("search-comisiones").value.toLowerCase();
+        let filtered = rawComisiones.filter(r => 
+            !query || 
+            (r.CLIENTE||"").toLowerCase().includes(query) || 
+            (r.CODIGO_POLIZA||"").toLowerCase().includes(query) ||
+            (r.ID_PRODUCTO||"").toLowerCase().includes(query)
+        );
+        
+        if (comisionStatusFilter !== "TODOS") {
+            filtered = filtered.filter(r => (r.ESTATUS || "").toUpperCase() === comisionStatusFilter.toUpperCase());
+        }
+        if (comisionMonthFilter !== "TODOS") {
+            filtered = filtered.filter(r => {
+                if (!r.ACTIVACION) return false;
+                let date = new Date(r.ACTIVACION);
+                if (isNaN(date)) {
+                    const parts = r.ACTIVACION.split(/[-/]/);
+                    if (parts.length === 3) date = new Date(parts[2], parts[1]-1, parts[0]);
+                }
+                if (!isNaN(date)) {
+                    const key = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}`;
+                    return key === comisionMonthFilter;
+                }
+                return false;
+            });
+        }
+        
+        const tbody = document.getElementById("tbody-comisiones"); tbody.innerHTML = "";
+        const container = document.getElementById("comisiones-btn-container"); container.innerHTML = "";
+        if (!filtered.length) { tbody.innerHTML = "<tr><td colspan='6' class='text-center'>Sin datos de comisiones</td></tr>"; return; }
+        
+        let rows = comisionesExpandidas ? filtered : filtered.slice(0, 6);
+        rows.forEach(row => {
+            let badge = "pill-neutral";
+            const est = (row.ESTATUS || "").toUpperCase();
+            if (est === "ACTIVA") badge = "pill-active";
+            else if (est === "PENDIENTE") badge = "pill-pending";
+            else if (est === "CANCELADA") badge = "pill-failed";
+            
+            const nap = parseFloat((row.NAP || "0").replace(/,/g, '')) || 0;
+            let porcRaw = row.PORC_COMISION || "";
+            let porcNum = 0;
+            const match = porcRaw.match(/(\d+(?:\.\d+)?)/);
+            if (match) {
+                let val = parseFloat(match[1]);
+                if (val <= 1 && porcRaw.includes('.')) val = val * 100;
+                porcNum = val;
+            }
+            let comisionMonto = parseFloat((row.COMISION_POLIZA || "0").replace(/[^0-9.-]/g, ''));
+            if (isNaN(comisionMonto)) comisionMonto = nap * (porcNum / 100);
+            
+            const master = document.createElement("tr"); master.className="interactive-row";
+            master.innerHTML = `<td class="text-center"><button class="trigger-arrow"><i class="fa-solid fa-angle-right"></i></button></td>
+                                <td class="text-left"><code>${row.CODIGO_POLIZA || "N/A"}</code></td>
+                                <td class="text-left">${row.CLIENTE || "N/A"}</td>
+                                <td class="text-right">${formatCurrencyNoSymbol(nap)}</td>
+                                <td class="text-right">${formatCurrencyNoSymbol(comisionMonto)}</td>
+                                <td class="text-center"><span class="badge-pill-flat ${badge}">${row.ESTATUS || "Pendiente"}</span></td>`;
+            
+            const detail = document.createElement("tr"); detail.className="accordion-hidden-row";
+            detail.innerHTML = `<td colspan="6"><div class="expanded-detail-card"><div class="detail-grid">
+                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-percent"></i> % Comisión</span><span class="field-value">${porcNum}%</span></div>
+                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-id-card"></i> ID Producto</span><span class="field-value">${row.ID_PRODUCTO || "—"}</span></div>
+                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-calendar"></i> Activación</span><span class="field-value">${row.ACTIVACION || "—"}</span></div>
+                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-location-dot"></i> Estado</span><span class="field-value">${row.ESTADO || "—"}</span></div>
+                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-credit-card"></i> Método Pago</span><span class="field-value">${row.METODO_PAGO || "—"}</span></div>
+                <div class="detail-field"><span class="field-label"><i class="fa-regular fa-chart-line"></i> Advance</span><span class="field-value">${row.ADVANCE || "—"}</span></div>
+            </div></div></td>`;
+            
+            master.addEventListener("click", (e) => { e.stopPropagation(); const open = detail.style.display === "table-row"; detail.style.display = open ? "none" : "table-row"; master.classList.toggle("row-expanded-state", !open); });
+            tbody.appendChild(master);
+            tbody.appendChild(detail);
+        });
+        
+        if (filtered.length > 6) {
+            const btn = document.createElement("button"); btn.className = "btn-expand";
+            btn.textContent = comisionesExpandidas ? "Mostrar solo 6" : "Ver todas las comisiones";
+            btn.onclick = () => { comisionesExpandidas = !comisionesExpandidas; renderTablaComisiones(); };
+            container.appendChild(btn);
+        }
+    }
+
     function showLoader(v) { document.getElementById("loader-overlay").style.display = v ? "flex" : "none"; }
-    function mostrarErrorGlobal() { document.getElementById("error-banner").style.display = "block"; setTimeout(()=>document.getElementById("error-banner").style.display="none",5000); }
+    function mostrarErrorGlobal() { document.getElementById("error-banner").style.display = "block"; setTimeout(() => document.getElementById("error-banner").style.display = "none", 5000); }
     function ocultarError() { document.getElementById("error-banner").style.display = "none"; }
 </script>
 </body>
