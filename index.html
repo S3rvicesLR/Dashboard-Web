@@ -930,7 +930,7 @@
 <body>
 
 <div id="error-banner">
-    <i class="fas fa-exclamation-triangle"></i> ERROR CRÍTICO AL CARGAR DATOS DESDE SUPABASE. VERIFIQUE CONECTIVIDAD O CONFIGURACIÓN.
+    <i class="fas fa-exclamation-triangle"></i> ERROR CRÍTICO AL CARGAR FUENTES DE DATOS. VERIFIQUE CONECTIVIDAD O FORMATO CSV.
 </div>
 
 <div id="loader-overlay">
@@ -1190,24 +1190,12 @@
 </div>
 
 <script>
-    // ==================== CONFIGURACIÓN SUPABASE ====================
-    const SUPABASE_URL = "https://udgdbidhdaubjeioqxvk.supabase.co/rest/v1";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVkZ2RiaWRoZGF1YmplaW9xeHZrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExMTYwOTcsImV4cCI6MjA5NjY5MjA5N30.XBnJ-951P0YK-VT407L0Y2WS_yvA3kdhZGhZXbKunFQ";
-
-    // Función genérica para obtener datos de una tabla de Supabase
-    async function fetchFromSupabase(tableName, select = '*') {
-        const url = `${SUPABASE_URL}/${tableName}?select=${encodeURIComponent(select)}`;
-        const response = await fetch(url, {
-            headers: {
-                'apikey': SUPABASE_ANON_KEY,
-                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`Error ${response.status} al obtener ${tableName}`);
-        }
-        return await response.json();
-    }
+    // ==================== URLs ====================
+    const URL_PRODUCCION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRa9NeyPlybmzHzoIwIItq20pONLLgFncynNsRaUrgN_2AkcWllA4rpivy3jiHY7g/pub?output=csv";
+    const URL_CONTRATACION = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRSHB4o3aQg2idd43uIe5qYEKDI0oXclGC3yakZ7BKO0YFh1NxAlMSIx7_m2mSCrg/pub?output=csv";
+    const URL_JERARQUIA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTiasPJsf35tv7RzV6-Px5_pDKCw1Rkw-PW40OWiB74ghaNkBuK_KjEgpu1AqCy0g/pub?output=csv";
+    const URL_PAGOS = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSKXEHJiZsjkKXLHrqn2VkVBUcYQcc-r24q0wBtBo-EFCRlFCdJlMt157ruVI8grw/pub?output=csv";
+    const URL_COMISIONES = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSP21RuFm0zpHEm1gA0eaXeV19nZCopySix6igoRa7P03jTRn3klX0J2PzP3rAnaQ/pub?output=csv";
 
     let rawProduccion = [], rawContratacion = [], rawJerarquia = [], rawPagos = [], rawComisiones = [];
     let filteredProduccion = [];
@@ -1242,6 +1230,7 @@
     function clearReadNotifications() {
         sessionStorage.removeItem(readNotificationsKey);
     }
+    // Genera un ID único por notificación (cliente + código póliza)
     function getNotificationId(not) {
         return `${not.cliente}|${not.codigoPoliza}`;
     }
@@ -1281,6 +1270,7 @@
                 });
             }
         }
+        // Eliminar duplicados
         const unique = new Map();
         for (const n of notificaciones) {
             if (!unique.has(n.id)) unique.set(n.id, n);
@@ -1332,6 +1322,7 @@
         clearReadNotifications();
         actualizarCampana();
     }
+    // ----------------------------------------------
 
     const formatCurrencyNoSymbol = (val) => isNaN(val) ? "0.00" : new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
     const formatPercent = (val) => new Intl.NumberFormat('en-US', { style: 'percent', minimumFractionDigits: 1 }).format(val / 100);
@@ -1378,7 +1369,6 @@
     }
 
     async function fetchWithRetry(url, retries = 3, delay = 1000) {
-        // Esta función ya no se usa para las fuentes principales, pero la dejamos por si se necesita en otro lado
         for (let i = 0; i < retries; i++) {
             try {
                 const response = await fetch(url);
@@ -1498,26 +1488,18 @@
     async function cargarFuentesExternas() {
         try {
             showLoader(true); ocultarError();
-            // Obtener datos desde Supabase (se asume que las tablas tienen los mismos nombres que los archivos CSV originales)
-            const [produccionData, contratacionData, jerarquiaData, pagosData, comisionesData] = await Promise.all([
-                fetchFromSupabase("produccion"),
-                fetchFromSupabase("contratacion"),
-                fetchFromSupabase("jerarquia"),
-                fetchFromSupabase("pagos"),
-                fetchFromSupabase("comisiones")
-            ]);
-            // Asignar los datos directamente (las propiedades ya vienen en el formato esperado por el resto del código)
-            rawProduccion = produccionData;
-            rawContratacion = contratacionData;
-            rawJerarquia = jerarquiaData;
-            rawPagos = pagosData;
-            rawComisiones = comisionesData;
-            
+            const [textProd, textCont, textJer, textPagos, textComisiones] = await Promise.all([fetchWithRetry(URL_PRODUCCION), fetchWithRetry(URL_CONTRATACION), fetchWithRetry(URL_JERARQUIA), fetchWithRetry(URL_PAGOS), fetchWithRetry(URL_COMISIONES)]);
+            rawProduccion = parseCSVProduccion(textProd);
+            rawContratacion = parseCSVContratacion(textCont);
+            rawJerarquia = parseCSVJerarquia(textJer);
+            rawPagos = parseCSVPagos(textPagos);
+            rawComisiones = parseCSVComisiones(textComisiones);
             actualizarComisionCodesSet();
             poblarFiltrosDinamicos();
             poblarFiltrosPagos();
             poblarFiltrosComisiones();
             establecerRangoFechaDefault();
+            // Resetear notificaciones leídas al cargar nuevos datos
             resetearEstadoLeidas();
             aplicarFiltros();
             renderTablaContrataciones();
@@ -1537,17 +1519,15 @@
         finally { showLoader(false); }
     }
 
-    function actualizarComisionCodesSet() { 
-        comisionCodesSet.clear(); 
-        if (rawComisiones && rawComisiones.length) 
-            rawComisiones.forEach(c => { if (c.CODIGO_POLIZA && c.CODIGO_POLIZA.trim() !== "") comisionCodesSet.add(c.CODIGO_POLIZA.trim()); }); 
-    }
+    function actualizarComisionCodesSet() { comisionCodesSet.clear(); if (rawComisiones && rawComisiones.length) rawComisiones.forEach(c => { if (c.CODIGO_POLIZA && c.CODIGO_POLIZA.trim() !== "") comisionCodesSet.add(c.CODIGO_POLIZA.trim()); }); }
 
-    // NOTA: Las funciones de parseo CSV ya no son necesarias porque los datos vienen directamente como objetos JSON desde Supabase.
-    // Sin embargo, el resto del código espera las propiedades en mayúsculas (ej: AGENTE, PRODUCTO, etc.).
-    // Si las columnas en Supabase están en minúsculas o con nombres diferentes, habrá que mapearlas.
-    // En este ejemplo se asume que las columnas en Supabase coinciden exactamente con las esperadas (mayúsculas y nombres iguales a los CSV).
-    // Si no es así, el usuario deberá ajustar las consultas o agregar un mapeo aquí.
+    // Funciones de parseo (sin cambios)
+    function parseCSVGeneral(csvText) { const rows = []; let inQuote = false, row = [], field = ""; for (let i = 0; i < csvText.length; i++) { const ch = csvText[i], next = csvText[i+1]; if (ch === '"') { if (inQuote && next === '"') { field += '"'; i++; } else inQuote = !inQuote; } else if (ch === ',' && !inQuote) { row.push(field); field = ""; } else if ((ch === '\n' || ch === '\r') && !inQuote) { if (ch === '\r' && next === '\n') i++; row.push(field); if (row.length > 1 || row[0] !== "") rows.push(row); row = []; field = ""; } else { field += ch; } } if (field || row.length) { row.push(field); if (row.length > 1 || row[0] !== "") rows.push(row); } return rows; }
+    function parseCSVProduccion(csvText) { const rows = parseCSVGeneral(csvText); if (!rows.length) return []; const headers = rows[0].map(h => h.trim()); return rows.slice(1).map(line => { const obj = {}; headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; }); return { AGENTE: obj["Agente"] || "", ID_PRODUCER: obj["ID Producer"] || "", PRODUCTO: obj["Producto"] || "", PRIMA_NAP: obj["Prima NAP"] || "0", CODIGO_POLIZA: obj["Codigo Poliza"] || "", EMISION: obj["Emision"] || "", ACTIVACION: obj["Activacion"] || obj["Emision"] || "", ESTATUS: obj["Estatus"] || "", ESTADO: obj["Estado"] || "", CLIENTE: obj["Cliente"] || "", DIRECCION: obj["Direccion"] || "", CIUDAD: obj["Ciudad"] || "", ZIP_CODE: obj["Zip Code"] || "", TELEFONO: obj["Telefono"] || "" }; }); }
+    function parseCSVContratacion(csvText) { const rows = parseCSVGeneral(csvText); if (!rows.length) return []; const headers = rows[0].map(h => h.trim()); return rows.slice(1).map(line => { const obj = {}; headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; }); return { AGENTE: obj["Agente"] || "", FECHA_CREACION: obj["Fecha de Creacion"] || "", TIPO_PROCESO: obj["Tipo de Proceso"] || "", ESTATUS: obj["Estatus"] || "", UPLINE: obj["Upline"] || "", CODIGO_NIVEL: obj["Codigo Nivel %"] || "" }; }); }
+    function parseCSVJerarquia(csvText) { const rows = parseCSVGeneral(csvText); if (!rows.length) return []; const headers = rows[0].map(h => h.trim()); return rows.slice(1).map(line => { const obj = {}; headers.forEach((h, idx) => { obj[h] = line[idx] ? line[idx].trim() : ""; }); return { AGENTE: obj["Agente"] || "", NPN_AGENTE: obj["NPN Agente"] || "", ID_PRODUCER: obj["ID Producer"] || "", FECHA_INGRESO: obj["Fecha Ingreso"] || "", CODIGO_NIVEL: obj["Codigo Nivel"] || "", NPN_UPLINE: obj["NPN Upline"] || "", UPLINE: obj["Upline"] || "" }; }); }
+    function parseCSVPagos(csvText) { const rows = parseCSVGeneral(csvText); if (!rows.length) return []; const headers = rows[0].map(h => h.trim().toLowerCase()); const findCol = (patterns) => { for (let i = 0; i < headers.length; i++) if (patterns.some(p => headers[i].includes(p))) return i; return -1; }; const idxCliente = findCol(["cliente"]); const idxCodigoPoliza = findCol(["codigo poliza", "codigo_poliza", "poliza"]); const idxIdProducto = findCol(["id producto", "id_producto", "producto id"]); const idxEstatus = findCol(["estatus"]); const idxPagadoHasta = findCol(["pagado hasta", "pagado_hasta"]); const idxMetodoPago = findCol(["metodo pago", "metodo_pago", "método pago"]); const idxPrima = findCol(["prima"]); const idxSeguimiento = findCol(["seguimiento pago", "seguimiento_pago", "seguimiento"]); const idxRegistroPdf = findCol(["registro_pdf", "registro pdf", "pdf"]); return rows.slice(1).map(line => { const get = (idx) => (idx !== -1 && line[idx]) ? line[idx].trim() : ""; return { CLIENTE: get(idxCliente), CODIGO_POLIZA: get(idxCodigoPoliza), ID_PRODUCTO: get(idxIdProducto), ESTATUS: get(idxEstatus), PAGADO_HASTA: get(idxPagadoHasta), METODO_PAGO: get(idxMetodoPago), PRIMA: get(idxPrima), SEGUIMIENTO_PAGO: get(idxSeguimiento), REGISTRO_PDF: get(idxRegistroPdf) }; }); }
+    function parseCSVComisiones(csvText) { const rows = parseCSVGeneral(csvText); if (!rows.length) return []; const headers = rows[0].map(h => h.trim()); function normalizar(str) { return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_"); } const normalizados = headers.map(normalizar); function encontrarIndice(palabrasClave) { for (let i = 0; i < normalizados.length; i++) for (const kw of palabrasClave) if (normalizados[i].includes(kw)) return i; return -1; } const idxMap = {}; let idx = encontrarIndice(["codigo_de_poliza", "codigo_poliza", "poliza"]); if (idx !== -1) idxMap.CODIGO_POLIZA = idx; idx = encontrarIndice(["id_producto", "producto_id"]); if (idx !== -1) idxMap.ID_PRODUCTO = idx; idx = encontrarIndice(["cliente"]); if (idx !== -1) idxMap.CLIENTE = idx; idx = encontrarIndice(["estatus"]); if (idx !== -1) idxMap.ESTATUS = idx; idx = encontrarIndice(["activacion"]); if (idx !== -1) idxMap.ACTIVACION = idx; idx = encontrarIndice(["estado"]); if (idx !== -1) idxMap.ESTADO = idx; idx = encontrarIndice(["metodo_pago", "pago"]); if (idx !== -1) idxMap.METODO_PAGO = idx; idx = encontrarIndice(["nap", "hap"]); if (idx !== -1) idxMap.NAP = idx; let porcIdx = -1; for (let i = 0; i < headers.length; i++) { const original = headers[i].toLowerCase(); if ((original.includes("comision") || original.includes("comisión")) && original.includes("%")) { porcIdx = i; break; } } if (porcIdx === -1) porcIdx = encontrarIndice(["porc_comision", "comision"]); if (porcIdx !== -1) idxMap.PORC_COMISION = porcIdx; idx = encontrarIndice(["advance"]); if (idx !== -1) idxMap.ADVANCE = idx; idx = encontrarIndice(["comision_de_la_poliza", "comision_poliza"]); if (idx !== -1) idxMap.COMISION_POLIZA = idx; return rows.slice(1).map(line => { const obj = {}; for (const [claveInterna, idx] of Object.entries(idxMap)) obj[claveInterna] = line[idx] ? line[idx].trim() : ""; return obj; }); }
 
     function poblarFiltrosDinamicos() {
         const prodSet = new Set(), agentSet = new Set();
